@@ -1,0 +1,30 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "env": {
+    "browser": true,
+    "commonjs": true,
+    "es6": true
+  },
+  "extends": ["airbnb", "prettier"],
+  "plugins": ["@typescript-eslint", "prettier","react-hooks"],
+  "globals": {
+    "logger": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2018
+  },
+  "rules": {
+    "import/no-extraneous-dependencies": 0,
+    "no-console": 0,
+    "global-require": 0,
+    "no-param-reassign": 0,
+    "import/no-dynamic-require": 0,
+    "react/jsx-filename-extension": 0,
+    "import/no-unresolved": 0,
+    "react/jsx-no-bind": 0,
+    "import/prefer-default-export": 0,
+    "camelcase": 0,
+    "jsx-a11y/click-events-have-key-events": 0,
+    "jsx-a11y/no-noninteractive-element-interactions": 0,
+  }
+}

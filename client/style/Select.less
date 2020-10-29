@@ -1,0 +1,48 @@
+@import url(./vars.less);
+.select {
+  position: relative;
+  overflow: visible;
+  &-display {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    i {
+      font-size: 8px;
+      color: @font-color-shallow;
+      margin-left: 4px;
+    }
+  }
+  &-options {
+    .block-shadow;
+    position: absolute;
+    top: 22px;
+    right: -10px;
+    max-height: 300px;
+    border: @normal-border;
+    transition: visibility 0.2s linear, opacity 0.2s linear;
+    z-index: 1;
+    &_show {
+      visibility: visible;
+      opacity: 1;
+    }
+    &_hide {
+      visibility: hidden;
+      opacity: 0;
+    }
+  }
+  &-option {
+    position: relative;
+    cursor: pointer;
+    &:hover > &-list {
+      display: block;
+    }
+    &-list {
+      display: none;
+      position: absolute;
+      top: -1px;
+      border: @normal-border;
+      border-radius: 2px;
+      color: @font-color-normal;
+    }
+  }
+}

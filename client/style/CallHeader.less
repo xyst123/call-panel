@@ -1,0 +1,87 @@
+@import url(./vars.less);
+.call-header {
+  background-color: #fbfbfb;
+  color: @font-color-normal;
+  padding: 12px 15px 17px 20px;
+  border-bottom: solid 1px #dedede;
+  .line {
+    display: flex;
+    align-items: center;
+    &-mode-text {
+      font-size: @font-large;
+    }
+    &-mode {
+      font-size: 14px;
+      margin-left: 5px;
+      cursor: pointer;
+    }
+    &-network {
+    }
+    &-indicator {
+      height: 8px;
+      width: 8px;
+      background-color: #00f;
+      border-radius: 50%;
+      margin: 0 4px 0 auto;
+    }
+    &-statuses {
+      &-item {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        font-size: 12px;
+        background-color: #fff;
+        &:hover {
+          color: @font-color-hover;
+          background-color: @background-color-hover;
+        }
+        i {
+          font-size: 14px;
+        }
+        p {
+          margin: 0 6px;
+        }
+      }
+    }
+    & > .icon-random {
+      margin-right: 5px;
+      font-size: @font-small;
+    }
+    &-numbers {
+      &-item {
+        display: flex;
+        align-items: center;
+        height: 28px;
+        padding: 0 10px;
+        background-color: #fff;
+        &:hover {
+          color: @font-color-hover;
+          background-color: @background-color-hover;
+        }
+        i {
+          display: none;
+          margin-left: 8px;
+        }
+        &_selected {
+          color: @font-color-hover;
+          i {
+            display: block;
+          }
+        }
+      }
+    }
+    & > .icon-callout {
+      margin-left: auto;
+      font-size: @font-small;
+      cursor: pointer;
+    }
+    &:first-child {
+      height: 30px;
+    }
+    &:last-child {
+      height: 16px;
+      font-size: @font-small;
+      color: @font-color-shallow;
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "id": "1563913",
+  "name": "ticket",
+  "font_family": "iconfont",
+  "css_prefix_text": "icon-",
+  "description": "",
+  "glyphs": [
+    {
+      "icon_id": "29924",
+      "name": "check",
+      "font_class": "check",
+      "unicode": "e645",
+      "unicode_decimal": 58949
+    },
+    {
+      "icon_id": "3050815",
+      "name": "箭头",
+      "font_class": "arrow",
+      "unicode": "e61b",
+      "unicode_decimal": 58907
+    },
+    {
+      "icon_id": "1327132",
+      "name": "切换",
+      "font_class": "switch",
+      "unicode": "e60d",
+      "unicode_decimal": 58893
+    }
+  ]
+}

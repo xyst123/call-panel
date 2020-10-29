@@ -1,0 +1,47 @@
+@import url(./vars.less);
+.call-dial {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  &-number {
+    display: flex;
+    align-items: center;
+    height: 50px;
+    input {
+      max-width: 216px;
+      padding: 0;
+      text-align: center;
+      border: none;
+      outline: none;
+    }
+    i {
+      color: @font-color-hover;
+      margin-left: 6px;
+      cursor: pointer;
+    }
+  }
+  &-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 50px);
+    grid-template-rows: repeat(4, 50px);
+    grid-gap: 10px 15px;
+    margin-top: 12px;
+  }
+  @size: 50px;
+  &-call {
+    margin: 24px 0;
+    border: none;
+    outline: none;
+    background-color: @background-color-call;
+    height: @size;
+    width: @size;
+    border-radius: 50%;
+    font-size: 20px !important;
+    color: #fff;
+    cursor: pointer;
+    &_disabled {
+      background-color: @background-color-call-disabled;
+      cursor: not-allowed;
+    }
+  }
+}

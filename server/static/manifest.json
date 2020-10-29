@@ -1,0 +1,17 @@
+{
+  "name": "客户推荐",
+  "short_name": "客户推荐",
+  "icons": [
+    {
+      "src": "/images/favicon.png",
+      "sizes": "120x120",
+      "type": "image/png"
+    }
+  ],
+  "start_url": "/main",
+  "background_color": "#108ee9",
+  "theme_color": "#108ee9",
+  "orientation": "portrait-primary",
+  "display": "standalone",
+  "description": "客户推荐"
+}

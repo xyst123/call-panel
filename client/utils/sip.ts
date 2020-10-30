@@ -3,6 +3,13 @@ import {get,getType,getStackTrace} from '@/utils';
 import {getSIPList} from '@/service/sip';
 import { handleRes } from '.';
 
+// @ts-ignore
+window.debug=(type: string)=>{
+  return ()=>{
+    
+  }
+}
+
 interface IServerOptions {
   codeTip: ICodeTip,
   proxy?: object,
@@ -240,14 +247,14 @@ class SIPServer {
   }
 
   notify(hasError:boolean,options:{codeTip:ICodeTip}){
-    // TODO debug
-    // debug('[init SipServer] %O', {
-    //   error: hasError,
-    //   options: {
-    //     code: options.code,
-    //     cause: sipServerInfo.Cause[options.code]
-    //   }
-    // });
+    // @ts-ignore
+    window.debug('[init SipServer] %O', {
+      error: hasError,
+      options: {
+        code: options.codeTip.code,
+        cause: options.codeTip.tip
+      }
+    });
     this.sipAdaptor.status = sipAdaptorStatusMap.initializeFail;
     this.lbsError = hasError;
     this.status = options.codeTip;

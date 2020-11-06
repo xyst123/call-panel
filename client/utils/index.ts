@@ -255,7 +255,7 @@ export const iterateMatchDOM = (DOM: HTMLElement, target: HTMLElement): boolean 
   if (DOM===target) {
     return true;
   }
-  if (DOM === document.documentElement) {
+  if (DOM === document.documentElement || !DOM) {
     return false;
   }
   return iterateMatchDOM(DOM.parentNode as HTMLElement, target);
@@ -271,3 +271,23 @@ export const getStackTrace = () => {
   Error.captureStackTrace(object, getStackTrace);
   return object.stack;
 };
+
+export const shuffle = (array:Array<any>) => {
+  const copyArray = [...array];
+  const { length } = copyArray;
+  for (let i = length - 1; i >= 0; i--) {
+    const random = Math.floor((i + 1) * Math.random());
+    [copyArray[random], copyArray[i]] = [copyArray[i], copyArray[random]];
+  }
+  return copyArray
+}
+
+export const hidePhoneNumber = (number:any) => {
+  if (!number || number.length > 16 || number.length < 5) return number;
+
+  const realNumber = String(number);
+  const source = realNumber.split('').reverse().join('');
+  const replaceLength = source.length >= 8 ? 4 : source.length - 4;
+
+  return source.replace(new RegExp("(\\S{4})(\\S{1,4})(\\S*)"), (match, p1, p2, p3) => `${p1}${'*'.repeat(replaceLength)}${p3}`).split('').reverse().join('')
+}

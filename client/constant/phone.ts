@@ -12,44 +12,6 @@ export enum SessionMode {
   intercom,
 }
 
-interface ISDKStatus {
-  code:number,
-  tip: string
-}
-
-export const sipAdaptorStatusMap:{
-  [key:string]: ISDKStatus
-} = {
-  success: {
-    code: 0,
-    tip:''
-  },
-  initializing: {
-    code: 1,
-    tip:'电话功能尚未初始化完成，请刷新或稍后重试！'
-  },
-  initializeFail: {
-    code: 2,
-    tip:'电话功能初始化失败，请刷新或稍后重试!'
-  },
-  microphoneNotFount: {
-    code: 3,
-    tip:'未找到可用的麦克风，请检查麦克风设置并刷新页面重试'
-  },
-  microphoneDisabled: {
-    code: 4,
-    tip:'麦克风被禁用，请检查麦克风设置并刷新页面重试'
-  },
-  unsafe: {
-    code: 5,
-    tip:'非安全模式不允许使用音频，请切换成HTTPS方式登录后使用'
-  },
-  connectingNotReady: {
-    code: 6,
-    tip:'电话功能尚未初始化完成，正在努力工作中，请刷新或稍后重试!'
-  },
-}
-
 export enum SDKStatus {
   success,
   initializing,
@@ -60,15 +22,43 @@ export enum SDKStatus {
   connectingNotReady,
 }
 
-export const callStatusMap = {
-  pause:'暂停中',
-  process:'处理中',
-  callIn:'等待接听',
-  callOut:'拨号中',
-  joinIn:'邀请你进入多方通话',
-  conference:'正在主持当前多方通话',
-  mute:'静音中',
-  speaking: '通话中',
+export interface IPhoneStatus {
+  mode: PhoneMode,
+  cachedStatus:number, // 缓存坐席状态
+  status: number, // 坐席状态
+  outCallRandom: boolean,  // 是否随机号码
+  outCallNumber: string // 本机号码
+  sessionMode: SessionMode,
+  callStatus:  keyof CallStatusMap,
+  jitterBuffer: number, // 网络延时
+  sessionId: number,  // 会话 id
+  isCaller: boolean,
+  inNextAnswer: false,  // 是否顺振
+  inNextAnswerCounter: number,  // 顺振倒计时
+  // 内部通话
+  intercom: {
+    remoteStaffName?: string,  // 远端客服
+    intercomFlag?: string,  // 通话标识
+  }
+  // 外部通话-多方
+  conference: {
+    chairmanName?:string, // 主持人
+    tip?:string, // 信息标识
+  },
+  // 外部通话-会话
+  session: {
+    hideCustomerNumber?:boolean,  // 是否隐藏用户号码
+    speakingNumbers?:string,  // 用户号码
+    mobileArea?:string,  // 地域标识
+    username?:string, // 用户名
+    vipLevel?:number, // 用户等级
+    callTransfer?:any, // 转接相关
+  }
+}
+
+export interface IExtendedPhoneStatus extends IPhoneStatus {
+  isBusy: boolean,
+  isRinging: boolean,
 }
 
 // 电话客服在线状态
@@ -102,3 +92,19 @@ export const restStatusMap = {
   5: {text: '洗手间', value: 5, icon: 'kfzt-xx-xsjx'},
   6: {text: '其他', value: 6, icon: 'kfzt-xx-qtx'},
 };
+
+// 呼叫状态
+export const callStatusMap = {
+  empty:'',
+  pause:'暂停中',
+  process:'处理中',
+  callIn:'等待接听',
+  callOut:'拨号中',
+  joinIn:'邀请你进入多方通话',
+  conference:'正在主持当前多方通话',
+  mute:'静音中',
+  speaking: '通话中',
+  callFail:''
+}
+
+type CallStatusMap = typeof callStatusMap;

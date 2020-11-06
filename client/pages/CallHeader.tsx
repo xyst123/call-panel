@@ -1,18 +1,21 @@
 import React, { useState, useEffect, useCallback,useMemo, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {Select,SelectOption} from '@/components/Select';
-import {PhoneMode,seatStatusMap,restStatusMap} from '@/configs/data';
+import {IExtendedPhoneStatus,seatStatusMap,restStatusMap} from '@/constant/phone';
+import {PhoneMode} from '@/constant/phone';
+import {setting} from '@/constant/outer';
 import {setPhoneMode,getOutCallNumbers} from '@/service/phone';
 import { get,debug,mapObject,handleRes,getStorage,setStorage } from '@/utils';
+import usePhone from '@/hooks/phone';
 import '@/style/CallHeader.less';
 
-const user =get(window,'setting.user',{});
+const user =get(setting,'user',{});
 const corpPermission =get(window,'corpPermission',{});
 const softSelectOptions=[1,2,6,0,8];
 const phoneSelectOptions=[4];
 const defaultRestStatus=1;
 
-const getNetworkLevel=(jitterBuffer:number):String=> {
+const getNetworkLevel=(jitterBuffer:number):string=> {
   if (jitterBuffer < 100) return 'highest';
   if (jitterBuffer < 200) return 'higher';
   if (jitterBuffer < 300) return 'high';
@@ -20,10 +23,8 @@ const getNetworkLevel=(jitterBuffer:number):String=> {
 }
 
 const CallHeader: React.FC<any> = () => {
-  const phone = useSelector((state: any) => state.phone);
+  const [phone, dispatch] = usePhone();
   const [restStatus, setRestStatus] =useState<number>(defaultRestStatus);
-  // 网络状态
-  const [jitterBuffer, setJitterBuffer] =useState<number>(0);
   // 是否被踢出
   const [kickedOut, setKickedOut] =useState<boolean>(false);
   // 本机号码备选列表
@@ -31,7 +32,8 @@ const CallHeader: React.FC<any> = () => {
   // 是否有内部通话权限
   const [isIntercomAllowed, setIsIntercomAllowed]=useState<boolean>(get(corpPermission,'IPCC_INEER_CALL',false) && get(user,'authority.KEFU_INTERCOM_OUT',false));
 
-  const dispatch = useDispatch();
+  const {jitterBuffer} = phone;
+  const networkLevel = getNetworkLevel(jitterBuffer);
 
   const callNumber=useMemo(()=>{
     if(phone.outCallRandom){
@@ -111,8 +113,8 @@ const CallHeader: React.FC<any> = () => {
     
     // 检查被踢
     if(kickedOut) {
-      const {originStatus} = phone;
-      if((currentStatus || originStatus)) {
+      const {status} = phone;
+      if((currentStatus || status)) {
         dispatch({
           type: 'PHONE_SET',
           payload: {
@@ -120,7 +122,7 @@ const CallHeader: React.FC<any> = () => {
           }
         })
       }
-      debug(`[sendStatus] ${seatStatusMap[originStatus].kickedText || '账号被踢'}`);
+      debug(`[sendStatus] ${seatStatusMap[status].kickedText || '账号被踢'}`);
     }
 
     // debug('[changeStatus]  status:%s mode:%d', this.getStatusText(status, statusExt), mode);
@@ -143,7 +145,7 @@ const CallHeader: React.FC<any> = () => {
         <p className="line-mode-text">电话服务</p>
         <i className="iconfont icon-phonex line-mode" style={{color:phone.mode!==PhoneMode.phone?'#888':'inherit'}}  title={phone.mode!==PhoneMode.phone?'点击切换为手机在线':'点击切换为软电话'} onClick={handleToggleMode}></i>
         {/* TODO 网络延迟 */}
-        {jitterBuffer>0?<i title="当前通话网络延迟:{jitterBuffer}ms" className={`u-icon-wifi line-network_${getNetworkLevel(jitterBuffer)}`}></i>:null}
+        {jitterBuffer>0?<i title={`当前通话网络延迟:${jitterBuffer}ms`} className={`u-icon-wifi line-network_${networkLevel}`}></i>:null}
         <i className="line-indicator" style={{backgroundColor:seatStatusMap[phone.status].color}}></i>
         <Select className="line-statuses" defaultValue={phone.status} onChange={handleSetStatus}>
           {softSelectOptions.map(option=>{

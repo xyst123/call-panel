@@ -1,0 +1,226 @@
+@import url(./vars.less);
+.call-busy {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  &-number {
+    padding-top: 15px;
+    text-align: center;
+    line-height: 40px;
+    font-size: 28px;
+    color: #4a4a4a;
+  }
+  &-tip {
+    line-height: 17px;
+    font-size: @font-small;
+    color: @font-color-shallow;
+  }
+  &-toggle {
+    position: absolute;
+    right: 12px;
+    top: 21px;
+    display: block;
+    font-size: 25px !important;
+    z-index: 1;
+    cursor: pointer;
+  }
+  &-area {
+    text-align: center;
+    font-size: @font-large;
+    color: #4a4a4a;
+    line-height: 22px;
+  }
+  &-avatar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin: 33px 0 10px 0;
+    @ring-size: 100px;
+    @avatar-size: 122px;
+    div {
+      position: absolute;
+      width: @ring-size;
+      height: @ring-size;
+      border: 2px solid transparent;
+      border-radius: 50%;
+      &:nth-child(1) {
+        animation-delay: 0ms;
+      }
+      &:nth-child(2) {
+        animation-delay: 600ms;
+      }
+      &:nth-child(3) {
+        animation-delay: 1200ms;
+      }
+    }
+    &_ringing {
+      div {
+        animation: call-ringing 2.4s linear infinite;
+      }
+    }
+    i {
+      display: block;
+      width: @avatar-size;
+      height: @avatar-size;
+      background: url(https://qiyukf.nosdn.127.net/prd/res/img/call/portrait_783978f5129eaa47add3b933a2831d11.png)
+        no-repeat;
+      background-size: contain;
+    }
+  }
+  &-name {
+    width: 90%;
+    height: 38px;
+    line-height: 38px;
+    font-size: 28px;
+    text-align: center;
+    color: #4a4a4a;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  &-vip {
+    line-height: 28px;
+    color: #ff502a;
+  }
+  &-count {
+    display: flex;
+    align-items: center;
+    line-height: 20px;
+    font-size: @font-small;
+    color: @font-color-shallow;
+    &-number {
+      color: #337eff;
+    }
+  }
+  &-radius-buttons {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    padding: 30px 0 20px 0;
+    .radius-buttons-item {
+      width: 94px;
+      height: 44px;
+      border-radius: 22px;
+      text-align: center;
+      line-height: 44px;
+      font-size: @font-small;
+      cursor: pointer;
+      &:first-child {
+        margin-left: 20px;
+      }
+      &:last-child {
+        margin-right: 20px;
+      }
+      &_green {
+        background-color: #53c251;
+        color: #fff;
+      }
+      &_yellow {
+        background-color: #f5a639;
+        color: #fff;
+      }
+      &_gray {
+        background-color: #f4f4f4;
+        color: #666;
+      }
+    }
+  }
+  &-icon-buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    padding: 0 24px;
+    .icon-buttons-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 30px;
+      margin: 50px auto 20px auto;
+      cursor: pointer;
+      i {
+        font-size: 22px;
+        color: #939393;
+      }
+      p {
+        margin-top: 8px;
+        color: #666;
+        font-size: @font-small;
+      }
+    }
+  }
+  &-text {
+    width: 100%;
+    padding: 30px 0 20px 0;
+    line-height: 59px;
+    text-align: center;
+    font-size: @font-large;
+    color: #64c04d;
+  }
+  &-dial {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: background-color 0.5s;
+    &_hide {
+      visibility: hidden;
+      background-color: initial;
+      .buttons {
+        visibility: hidden;
+        opacity: 0;
+        margin-top: -100px;
+      }
+    }
+    &_show {
+      visibility: visible;
+      background-color: #fff;
+      .buttons {
+        visibility: visible;
+        opacity: 1;
+        margin-top: 30px;
+      }
+    }
+    input {
+      width: 100%;
+      padding: 15px 42px 0 15px;
+      line-height: 40px;
+      text-align: center;
+      font-size: 28px;
+      color: #4a4a4a;
+      border: none;
+      outline: none;
+    }
+    .buttons {
+      transition: visibility 0.2s linear, opacity 0.2s linear,
+        margin-top 0.3s ease-in-out;
+    }
+  }
+}
+@keyframes call-ringing {
+  0% {
+    transform: scale(1);
+    border-color: rgba(110, 215, 108, 1);
+  }
+  10% {
+    transform: scale(1.1);
+    border-color: rgba(110, 215, 108, 0.75);
+  }
+  30% {
+    transform: scale(1.2);
+    border-color: rgba(110, 215, 108, 0.5);
+  }
+  60% {
+    transform: scale(1.3);
+    border-color: rgba(110, 215, 108, 0.25);
+  }
+  100% {
+    transform: scale(1.4);
+    border-color: rgba(110, 215, 108, 0);
+  }
+}

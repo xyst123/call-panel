@@ -40,21 +40,6 @@ function requestPermission() {
 // }
 
 // @ts-ignore
-window.setting={
-  isToolBar:true, // 工具条
-  callUser:{
-    status:0,
-    mode:0,
-    outcallRandom:false
-  },
-  user:{
-    authority:{
-      KEFU_INTERCOM_OUT:true
-    }
-  }
-}
-
-// @ts-ignore
 window.corpPermission={
   IPCC_INEER_CALL:true
 }

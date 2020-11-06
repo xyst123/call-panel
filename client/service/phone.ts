@@ -1,5 +1,5 @@
 import { request, getRes } from '@/utils';
-import {PhoneMode} from '@/configs/data';
+import {PhoneMode} from '@/constant/phone';
 
 export const setPhoneMode = async (
   mode:PhoneMode,

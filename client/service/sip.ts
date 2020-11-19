@@ -13,10 +13,10 @@ export const getSIPList = async (): Promise<Common.IRes> => {
       url: `/api/callcenter/lbs/sip/list`,
     });
     const res = getRes(response, message);
-    return res.status?{
+    return res.status ? {
       ...res,
-      data:response.result
-    }:res
+      data: response.result
+    } : res
   } catch (error) {
     return getRes(error, message);
   }

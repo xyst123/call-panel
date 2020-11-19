@@ -1,3 +1,8 @@
+interface Window {
+  debug: Function
+}
+declare let debug: Window["debug"];
+
 declare namespace Common {
   interface IRes {
     status: boolean;

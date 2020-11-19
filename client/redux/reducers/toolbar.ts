@@ -1,4 +1,5 @@
-const initialState={
+import { get, assignState } from '@/utils';
+const initialState = {
   open: false
 }
 export const toolbar = (
@@ -7,10 +8,7 @@ export const toolbar = (
 ) => {
   switch (action.type) {
     case 'TOOLBAR_SET':
-      return {
-        ...state,
-        open: action.payload
-      };
+      return assignState(action.payload, state);
     default:
       return state;
   }

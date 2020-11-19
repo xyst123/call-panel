@@ -23,6 +23,6 @@
       ]
     }
   },
-  "include": ["client/**/*.ts", "client/**/*.tsx", "client/router/index.jsx"],
+  "include": ["client/**/*.ts", "client/**/*.tsx", "client/router.jsx"],
   "exclude": ["node_modules/**"]
 }

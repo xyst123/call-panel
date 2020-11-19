@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig, Method } from 'axios';
 import qs from 'qs';
 // @ts-ignore
-import {message} from 'ppfish';
+import { message } from 'ppfish';
 
 export const iterateObject = (
   object: { [key: string]: any },
@@ -80,7 +80,7 @@ export const request = async <T>({
       headers['Content-Type'] = 'application/x-www-form-urlencoded';
     }
   }
-  
+
   const options: AxiosRequestConfig = {
     method: <Method>method,
     url,
@@ -118,7 +118,7 @@ export const getRes = (
     return {
       status: true,
       code,
-      msg: message[String(successCode)] || '',
+      msg: message[String(successCode)] || res.message || '',
     };
   }
   console.error(res);
@@ -126,20 +126,21 @@ export const getRes = (
     status: false,
     code,
     data: res,
-    msg: message[String(code)] || message['-1'] || '',
+    msg: message[String(code)] || res.message || message['-1'] || '',
   };
 };
 
-export const handleRes=(res:Common.IRes,successCallback:Function=Function.prototype,failCallback:Function=Function.prototype)=>{
-  const {status,msg} = res;
-  if(status){
-    const forbidAlert=successCallback(res.data);
-    if(msg && !forbidAlert){
+export const handleRes = (res: Common.IRes, successCallback: Function = Function.prototype, failCallback: Function = Function.prototype) => {
+  const { status, msg } = res;
+  if (status) {
+    const forbidAlert = successCallback(res.data);
+    if (msg && !forbidAlert) {
       message.success(msg);
     }
-  } 
-  const forbidAlert=failCallback(res.data);
-  if(msg && !forbidAlert){
+    return
+  }
+  const forbidAlert = failCallback(res.data);
+  if (msg && !forbidAlert) {
     message.error(msg);
   }
 }
@@ -252,7 +253,7 @@ export const getUrlQuery = (key?: string): any => {
 };
 
 export const iterateMatchDOM = (DOM: HTMLElement, target: HTMLElement): boolean => {
-  if (DOM===target) {
+  if (DOM === target) {
     return true;
   }
   if (DOM === document.documentElement || !DOM) {
@@ -262,17 +263,17 @@ export const iterateMatchDOM = (DOM: HTMLElement, target: HTMLElement): boolean 
 };
 
 // @ts-ignore
-export const debug = (info:string)=>{
+export const debug = (info: string, ...options) => {
   console.log(info)
 }
 
 export const getStackTrace = () => {
-  const object:any = {};
+  const object: any = {};
   Error.captureStackTrace(object, getStackTrace);
   return object.stack;
 };
 
-export const shuffle = (array:Array<any>) => {
+export const shuffle = (array: Array<any>) => {
   const copyArray = [...array];
   const { length } = copyArray;
   for (let i = length - 1; i >= 0; i--) {
@@ -282,7 +283,7 @@ export const shuffle = (array:Array<any>) => {
   return copyArray
 }
 
-export const hidePhoneNumber = (number:any) => {
+export const hidePhoneNumber = (number: any) => {
   if (!number || number.length > 16 || number.length < 5) return number;
 
   const realNumber = String(number);
@@ -290,4 +291,29 @@ export const hidePhoneNumber = (number:any) => {
   const replaceLength = source.length >= 8 ? 4 : source.length - 4;
 
   return source.replace(new RegExp("(\\S{4})(\\S{1,4})(\\S*)"), (match, p1, p2, p3) => `${p1}${'*'.repeat(replaceLength)}${p3}`).split('').reverse().join('')
+}
+
+export const assignState = (data: Object, state: any) => {
+  const copyState = { ...state };
+  iterateObject(data, (value, key) => {
+    if (getType(value) === 'object') {
+      copyState[key] = assignState(value, copyState[key])
+    } else {
+      copyState[key] = value
+    }
+  })
+  return copyState;
+}
+
+export const resetState = (data: Object, state: any, initialState: any) => {
+  const copyState = { ...state };
+  const copyInitialState = { ...initialState }
+  iterateObject(data, (value, key) => {
+    if (getType(value) === 'object') {
+      copyState[key] = resetState(value, copyState[key], copyInitialState[key])
+    } else if (value) {
+      copyState[key] = copyInitialState[key]
+    }
+  })
+  return copyState;
 }

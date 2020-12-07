@@ -1,0 +1,30 @@
+@import url(./vars.less);
+.select-other {
+  flex: 1;
+  &-content {
+    border: 1px solid #ccc;
+    border-radius: 2px;
+    padding: 23px 31px;
+    & > p {
+      color: @font-color-shallow;
+      line-height: 16px;
+      font-size: @font-small;
+    }
+    & > div {
+      display: flex;
+      align-items: center;
+      font-size: @font-small;
+      margin-top: 20px;
+      p::after {
+        content: '*';
+        color: @primary-color;
+        margin-left: 2px;
+      }
+      input {
+        width: 340px;
+        margin-left: 10px;
+        font-size: @font-small;
+      }
+    }
+  }
+}

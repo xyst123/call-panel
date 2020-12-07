@@ -1,0 +1,91 @@
+@import url(./vars.less);
+.select-board {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  border: 1px solid #e1e3e6;
+  border-top: 0;
+  border-radius: 0 0 3px 3px;
+  overflow-y: auto;
+  .fishdicon {
+    align-self: center;
+    font-size: 24px;
+    color: @font-color-shallow;
+  }
+  ul {
+    width: 100%;
+    height: fit-content;
+    padding: 16px 16px 0 16px;
+    li {
+      display: inline-flex;
+      align-items: center;
+      width: 150px;
+      height: 26px;
+      margin: 0 0 16px 12px;
+      cursor: pointer;
+      &:nth-child(3n + 1) {
+        margin-left: 0;
+      }
+      i:first-child {
+        font-size: @font-normal;
+        color: @font-color-shallow;
+      }
+      .select-board-text {
+        display: inline-block;
+        margin-left: 3px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+      i:last-child {
+        display: inline-block;
+        height: 16px;
+        margin-left: 3px;
+        font-size: @font-normal;
+        color: @font-color-shallow;
+        &.icon-kfOnline {
+          color: #64c04d;
+        }
+        &.icon-mobile {
+          color: @font-color-shallow;
+        }
+        &.icon-kfRest {
+          color: #9c9c9c;
+        }
+        &.icon-kfBusy {
+          color: #f5777d;
+        }
+        &.icon-kfForecast {
+          color: #8c7afe;
+        }
+      }
+
+      &.item_selected {
+        color: @primary-color;
+        i {
+          color: @primary-color !important;
+        }
+      }
+
+      &.item_busy {
+        cursor: not-allowed;
+      }
+
+      &.item_disabled {
+        color: @font-color-shallow;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+.select-text {
+  box-sizing: border-box;
+  padding-top: 16px;
+  color: @font-color-shallow;
+  text-align: center;
+  i {
+    margin-right: 4px;
+  }
+}

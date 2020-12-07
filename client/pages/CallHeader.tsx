@@ -7,6 +7,7 @@ import { setting, corpPermission } from '@/constant/outer';
 import { setPhoneMode, getOutCallNumbers } from '@/service/phone';
 import { get, debug, mapObject, handleRes, getStorage, setStorage } from '@/utils';
 import usePhone from '@/hooks/phone';
+import useGlobal from '@/hooks/global';
 import '@/style/CallHeader.less';
 
 const user = get(setting, 'user', {});
@@ -14,6 +15,9 @@ const callUser = get(setting, 'callUser', {});
 const softSelectOptions = [1, 2, 6, 0, 8];
 const phoneSelectOptions = [4];
 const defaultRestStatus = 1;
+// 是否有内部通话权限
+const isIntercomAllowed =
+  get(corpPermission, 'IPCC_INEER_CALL', false) && get(setting, 'user.authority.KEFU_INTERCOM_OUT', false);
 
 const getNetworkLevel = (jitterBuffer: number): string => {
   if (jitterBuffer < 100) return 'highest';
@@ -23,24 +27,21 @@ const getNetworkLevel = (jitterBuffer: number): string => {
 }
 
 const CallHeader: React.FC<any> = () => {
-  const { phone, startSetStatus } = usePhone();
+  const { phone, startSetStatus, startIntercomCallOut } = usePhone();
+  const { global } = useGlobal();
   const [restStatus, setRestStatus] = useState<number>(defaultRestStatus);
-  // 本机号码备选列表
-  const [outCallNumbers, setOutCallNumbers] = useState<string[]>([]);
-  // 是否有内部通话权限
-  const [isIntercomAllowed, setIsIntercomAllowed] = useState<boolean>(get(corpPermission, 'IPCC_INEER_CALL', false) && get(user, 'authority.KEFU_INTERCOM_OUT', false));
 
-  const { jitterBuffer } = phone;
+  const { outCallRandom, outCallNumber, outCallNumbers, jitterBuffer } = phone;
   const networkLevel = getNetworkLevel(jitterBuffer);
   const dispatch = useDispatch();
 
   const callNumber = useMemo(() => {
-    if (phone.outCallRandom) {
+    if (outCallRandom) {
       return <><i className="iconfont icon-random" title="已开启随机外呼模式，本机号码随机生成"></i><p>随机</p></>
     }
     if (outCallNumbers.length > 1) {
-      return <Select defaultValue={phone.outCallNumber} className="line-numbers" onChange={(value: string) => { handleSetOutCallNumber(value) }}>
-        {outCallNumbers.map(item => <SelectOption key={item} value={item} label={item} className={`line-numbers-item ${item === phone.outCallNumber ? 'line-numbers-item_selected' : ''}`}>
+      return <Select defaultValue={outCallNumber} className="line-numbers" onChange={(value: string) => { handleSetOutCallNumber(value) }}>
+        {outCallNumbers.map(item => <SelectOption key={item} value={item} label={item} className={`line-numbers-item ${item === outCallNumber ? 'line-numbers-item_selected' : ''}`}>
           <p>{item}</p>
           <i className="iconfont icon-check-line-regular"></i>
         </SelectOption>)}
@@ -75,17 +76,22 @@ const CallHeader: React.FC<any> = () => {
           mode: targetMode
         }
       })
-      return true
     })
   }
 
   // 获取本机号码备选列表，初始化本机号码
   const handleGetOutCallNumbers = async () => {
-    if (!phone.outCallRandom) {
+    if (!outCallRandom) {
       const res = await getOutCallNumbers()
       handleRes(res, () => {
         const { data = [] } = res;
-        setOutCallNumbers(data);
+        dispatch({
+          type: 'PHONE_SET',
+          payload: {
+            outCallNumbers: data
+          }
+        })
+
         let selectedOutCallNumber = '';
         if (data.length === 1) {
           selectedOutCallNumber = data[0]
@@ -96,19 +102,23 @@ const CallHeader: React.FC<any> = () => {
           }
         }
         handleSetOutCallNumber(selectedOutCallNumber)
-        return true
-      }, () => true)
+      }, () => { })
     }
   }
 
-  // TODO 处理内部通话
   const handleIntercom = () => {
-
+    dispatch({
+      type: 'GLOBAL_SET_SELECT_MODAL',
+      payload: {
+        type: 'intercom',
+        handler: startIntercomCallOut
+      }
+    })
   }
 
   useEffect(() => {
     handleGetOutCallNumbers()
-  }, [phone.outCallRandom]);
+  }, [outCallRandom]);
 
 
   return (
@@ -119,7 +129,9 @@ const CallHeader: React.FC<any> = () => {
         {/* TODO 网络延迟 */}
         {jitterBuffer > 0 ? <i title={`当前通话网络延迟:${jitterBuffer}ms`} className={`u-icon-wifi line-network_${networkLevel}`}></i> : null}
         <i className="line-indicator" style={{ backgroundColor: seatStatusMap[phone.status].color }}></i>
-        <Select className="line-statuses" defaultValue={phone.status} disabled={phone.statusSelectDisabled} onChange={startSetStatus}>
+        <Select className="line-statuses" defaultValue={phone.status} disabled={phone.statusSelectDisabled} overflowY='visible' onChange={(value: number | number[]) => {
+          startSetStatus({ value })
+        }}>
           {softSelectOptions.map(option => {
             const currentStatus = seatStatusMap[option];
             const subOptions = currentStatus.value === 2 ? mapObject(restStatusMap, (currentRestStatus) => (
@@ -147,6 +159,7 @@ const CallHeader: React.FC<any> = () => {
           isIntercomAllowed ? <i className="iconfont icon-callout" onClick={handleIntercom}></i> : null
         }
       </div>
+
     </div>
   );
 };

@@ -1,8 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SessionMode, PhoneMode, callStatusMap } from '@/constant/phone';
 import DialButtons from '@/pages/DialButtons';
-import TransferModal from '@/pages/TransferModal';
-import ConferenceModal from '@/pages/ConferenceModal';
 import { get, hidePhoneNumber } from '@/utils';
 import { sipAdaptor } from '@/utils/sip';
 import usePhone from '@/hooks/phone';
@@ -16,9 +14,11 @@ import '@/style/CallBusy.less';
 const callUser = get(setting, 'callUser', {});
 
 const CallBusy: React.FC<any> = () => {
-  const { phone, handleCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, phoneReset } = usePhone();
+  const { phone, handleCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, handleConference, handleTransfer, phoneReset } = usePhone();
   const [extNumber, setExtNumber] = useState('');
   const [showDial, setShowDial] = useState(false);
+  const countDownTimer = useRef<NodeJS.Timeout | null>(null);
+  const [countDownNumber, setCountDownNumber] = useState(callUser.maxDealTime);
 
   const { callStatus, sessionMode } = phone;
   const isRinging = ['callIn', 'callOut', 'joinIn', 'callFail'].includes(callStatus);
@@ -176,14 +176,22 @@ const CallBusy: React.FC<any> = () => {
         icon: 'transfer',
         text: '转接',
         handler() {
-
+          dispatch({
+            type: 'GLOBAL_SET_SELECT_MODAL',
+            payload: { type: 'transfer', handler: handleTransfer }
+          })
         },
       },
       {
         show: sessionMode !== SessionMode.intercom && corpPermission.CALLCENTER_CONFERENCE && phone.statusCached !== 8,
         icon: 'members-circle',
         text: '多方',
-        handler() { },
+        handler() {
+          dispatch({
+            type: 'GLOBAL_SET_SELECT_MODAL',
+            payload: { type: 'conference', handler: handleConference.bind(null, 'create') }
+          })
+        },
       },
       {
         show: phone.mode !== PhoneMode.sip,
@@ -217,7 +225,7 @@ const CallBusy: React.FC<any> = () => {
           if (phone.callTaskData) { handleCallTask(phone.callTaskData); }
           else {
             if (phone.sessionMode === SessionMode.intercom) {
-              handleIntercomCallOut();
+              handleIntercomCallOut(phone.intercom.remoteStaffId);
             } else {
               handleCallOut();
             }
@@ -377,11 +385,28 @@ const CallBusy: React.FC<any> = () => {
     }
   }
 
+  const clearCountDownTimer = () => {
+    if (countDownTimer.current) {
+      clearInterval(countDownTimer.current);
+    }
+  }
+
+  useEffect(() => {
+    if (callStatus !== 'process' || countDownNumber < 2) {
+      clearCountDownTimer()
+    } else {
+      countDownTimer.current = setTimeout(() => {
+        setCountDownNumber(countDownNumber - 1);
+      }, 1000)
+    }
+  }, [callStatus, countDownNumber])
+
   useEffect(() => {
     const volume = get(setting, 'callUser.ringVolume', 100) / 100;
     audioConnectSound && (audioConnectSound.volume = volume);
     audioHangupSound && (audioHangupSound.volume = volume);
     audioRingSound && (audioRingSound.volume = volume);
+    return clearCountDownTimer
   }, [])
 
   return <div className="call-busy">
@@ -413,7 +438,7 @@ const CallBusy: React.FC<any> = () => {
 
     {/* 【通话-状态提示信息】 */}
     <p className="call-busy-tip">{phone.tip}</p>
-    {callStatus === 'process' && true ? <p className="call-busy-count">在<span className="call-busy-count-number">{` ${6}s `}</span>后将自动进入下一则通话</p> : null}
+    {callStatus === 'process' ? <p className="call-busy-count">在<span className="call-busy-count-number">{`${countDownNumber}s`}</span>后将自动进入下一则通话</p> : null}
 
     {/* 【通话操作】 */}
     {renderByCallStatus()}

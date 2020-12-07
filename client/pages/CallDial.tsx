@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 // @ts-ignore
-import { message } from 'ppfish';
 import DialButtons from '@/pages/DialButtons';
 import { setting, ipccSetting } from '@/constant/outer';
 import { getSetting, callOut } from '@/service/phone';
-import { get, debug, mapObject, handleRes, getStorage, setStorage } from '@/utils';
+import { get, debug, mapObject, handleRes } from '@/utils';
 import usePhone from '@/hooks/phone';
 import '@/style/CallDial.less';
 
@@ -28,23 +27,22 @@ const CallDial: React.FC<any> = () => {
   const input = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch();
 
-  const handleSetDialNumber = useCallback((value: string) => {
+  const handleSetDialNumber = (value: string) => {
     dispatch({
       type: 'PHONE_SET',
       payload: {
         dialingNumber: value
       }
     });
-    (input.current as HTMLInputElement).focus();
-  }, []);
+    input.current?.focus();
+  }
 
-  const handleGetSetting = useCallback(async () => {
+  const handleGetSetting = async () => {
     const res = await getSetting();
     handleRes(res, () => {
       setDisableUnsigned(Boolean(get(res, 'data.permission.corp.CORP_SECURITY_BOOK', 0)));
-      return true
     })
-  }, []);
+  }
 
   const checkAndCall = async () => {
     if (disableToolbar) return; // 呼叫工具条暂时不让外呼

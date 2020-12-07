@@ -6,7 +6,8 @@ export const setting = {
     username: "10100600000105",
     outcallRandom: false,
     appId: "e7ccb39f9bb547c7b22aa040ef726f03",
-    password: "07bcp72g"
+    password: "07bcp72g",
+    maxDealTime: 10
   },
   user: {
     authority: {
@@ -20,7 +21,9 @@ export const setting = {
 };
 
 export const corpPermission = {
-  CALLCENTER_CONFERENCE: true
+  CALLCENTER_CONFERENCE: true,
+  IPCC_INEER_CALL: true,
+
 }
 
 export const ipccSetting = {

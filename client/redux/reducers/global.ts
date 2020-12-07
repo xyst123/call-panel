@@ -1,4 +1,5 @@
 import { get, assignState, resetState } from '@/utils';
+import { intercomModalMap, ModalType } from '@/constant/phone';
 const initialState = {
   modalConfig: {
     visible: false,
@@ -6,7 +7,16 @@ const initialState = {
     esc: true,
     children: null
   },
+  selectModalConfig: {
+    visible: false,
+    type: '',
+    text: '',
+    tabs: [],
+    handler: Function.prototype,
+    extData: {}
+  },
 }
+
 export const global = (
   state = initialState,
   action: Store.IAction
@@ -16,6 +26,17 @@ export const global = (
       return assignState(action.payload, state);
     case 'GLOBAL_RESET':
       return resetState(action.payload, state, initialState);
+    case 'GLOBAL_SET_SELECT_MODAL':
+      const { type, handler } = action.payload;
+      return {
+        ...state,
+        selectModalConfig: {
+          visible: true,
+          type,
+          ...intercomModalMap[type as ModalType],
+          handler,
+        }
+      }
     default:
       return state;
   }

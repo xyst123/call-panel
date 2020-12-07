@@ -30,8 +30,9 @@ export interface IPhoneStatus {
   statusSelectDisabled: boolean,
   isAutoAnswerFirstTips: boolean,
   outCallRandom: boolean,  // 是否随机号码
-  restStatusSwitch: 0 | 1 // 是否开启小休细分
+  outCallNumbers: string[], // 本机号码备选列表
   outCallNumber: string // 本机号码
+  restStatusSwitch: 0 | 1 // 是否开启小休细分
   sessionMode: SessionMode,
   callStatus: keyof CallStatusMap,
   jitterBuffer: number, // 网络延时
@@ -49,7 +50,7 @@ export interface IPhoneStatus {
   // 内部通话相关
   intercom: {
     intercomId: number,  // 内部通话会话 id
-    remoteStaffId: string,
+    remoteStaffId: number,
     remoteStaffName: string,
     intercomFlag: string,  // 通话标识
   }
@@ -85,21 +86,43 @@ interface IStatus {
   icon: string;
   color: string;
   kickedText?: string;
+  modalIcon?: string;
+  modalStatus?: string;
 }
 export const seatStatusMap: {
   [key: number]: IStatus;
 } = {
-  0: { text: '离线', value: 0, icon: 'kfzt-lxx', color: '#b6b6b6', },
-  1: { text: '在线', value: 1, icon: 'kfzt-zxx', color: '#53c251' },  //web在线
-  2: { text: '小休', value: 2, icon: 'kfzt-xxx', color: '#f8a755' },
-  3: { text: '通话中', value: 3, icon: 'kfzt-thzx', color: '#53c251', kickedText: '通话中被踢' },
-  4: { text: '手机在线', value: 4, icon: 'phonex', color: '#53c251' },
-  5: { text: '在线', value: 5, icon: 'kfzt-zxx', color: '#53c251' },  //sip话机在线
-  6: { text: '挂起', value: 6, icon: 'kfzt-gqx', color: '#b6b6b6' },
-  7: { text: '处理中', value: 7, icon: 'kfzt-jxzx', color: '#53c251', kickedText: '处理中被踢' },
-  8: { text: '自动外呼', value: 8, icon: 'kfzt-zdwhx', color: '#53c251' },
+  0: { text: '离线', value: 0, icon: 'kfzt-lxx', color: '#b6b6b6', modalStatus: 'disabled' },
+  1: { text: '在线', value: 1, icon: 'kfzt-zxx', color: '#53c251', modalIcon: 'kfOnline' },  //web在线
+  2: { text: '小休', value: 2, icon: 'kfzt-xxx', color: '#f8a755', modalIcon: 'kfRest', modalStatus: 'busy' },
+  3: { text: '通话中', value: 3, icon: 'kfzt-thzx', color: '#53c251', kickedText: '通话中被踢', modalIcon: 'kfBusy', modalStatus: 'busy' },
+  4: { text: '手机在线', value: 4, icon: 'phonex', color: '#53c251', modalIcon: 'mobile', modalStatus: 'disabled' },
+  // SIP话机在线
+  5: { text: '在线', value: 5, icon: 'kfzt-zxx', color: '#53c251', modalIcon: 'kfOnline' },  //sip话机在线
+  6: { text: '挂起', value: 6, icon: 'kfzt-gqx', color: '#b6b6b6', modalIcon: 'kfHangup', modalStatus: 'busy' },
+  7: { text: '处理中', value: 7, icon: 'kfzt-jxzx', color: '#53c251', kickedText: '处理中被踢', modalIcon: 'kfBusy', modalStatus: 'busy' },
+  8: { text: '自动外呼', value: 8, icon: 'kfzt-zdwhx', color: '#53c251', modalIcon: 'kfForecast', modalStatus: 'busy' },
 };
 export type TSeatStatus = keyof (typeof seatStatusMap);
+
+export const groupStatusMap: {
+  [key: number]: any;
+} = {
+  0: {
+    value: 0,
+    modalStatus: 'disabled',
+  },
+  1: {
+    value: 1,
+    modalIcon: 'kfOnline'
+  },
+  2: {
+    value: 2,
+    modalStatus: 'disabled',
+    modalIcon: 'kfBusy'
+  },
+}
+export type TGroupStatus = keyof (typeof groupStatusMap);
 
 // 小休状态细分
 export const restStatusMap = {
@@ -110,7 +133,7 @@ export const restStatusMap = {
   5: { text: '洗手间', value: 5, icon: 'kfzt-xx-xsjx' },
   6: { text: '其他', value: 6, icon: 'kfzt-xx-qtx' },
 };
-export type TRestStatus = keyof (typeof restStatusMap);
+export type TRestStatus = keyof typeof restStatusMap;
 
 // 呼叫状态
 export const callStatusMap = {
@@ -125,5 +148,96 @@ export const callStatusMap = {
   speaking: '通话中',
   callFail: ''
 }
-
 type CallStatusMap = typeof callStatusMap;
+
+export interface ISeat {
+  id: number,
+  status: TSeatStatus,
+  realname: string,
+  _disabled: boolean,
+  _intercomIconClassName?: string,
+  _intercomStatusClassName?: string,
+}
+
+export interface IGroup {
+  id: number,
+  status: TGroupStatus,
+  name: string,
+  _disabled: boolean,
+  _intercomIconClassName?: string,
+  _intercomStatusClassName?: string,
+}
+
+export interface IIVR {
+  value: number,
+  label: string,
+  ivrId: number,
+}
+
+export const memberInitial = {
+  id: '', // 成员标识
+  name: '', // 成员名
+  isChairman: false, // 是否是会议主席
+  conferenceId: 0, // 会议id 
+  state: 0, // 成员是否加入
+  mute: 0, // 成员是否静音
+  time: 0 // 成员加入时间，用于显示时按时间排序
+};
+
+export enum TabKey {
+  seat,
+  group,
+  groupSeat,
+  ivr,
+  other
+}
+
+export const intercomModalMap = {
+  intercom: {
+    text: '选择内部通话对象',
+    tabs: [{
+      id: TabKey.seat,
+      name: '呼叫坐席'
+    }, {
+      id: TabKey.groupSeat,
+      name: '客服组'
+    }],
+    extData: {
+      action: '内部通话',
+    },
+  },
+  conference: {
+    text: '选择邀请对象',
+    tabs: [{
+      id: TabKey.seat,
+      name: '呼叫坐席'
+    }, {
+      id: TabKey.other,
+      name: '邀请第三方'
+    }],
+    extData: {
+      action: '邀请',
+    }
+  },
+  transfer: {
+    text: '选择转接对象',
+    tabs: [{
+      id: TabKey.seat,
+      name: '呼叫坐席'
+    }, {
+      id: TabKey.group,
+      name: '客服组'
+    }, {
+      id: TabKey.ivr,
+      name: 'IVR'
+    }, {
+      id: TabKey.other,
+      name: '第三方'
+    }],
+    extData: {
+      action: '转接',
+    }
+  },
+}
+
+export type ModalType = keyof typeof intercomModalMap;

@@ -6,7 +6,7 @@ const callUser = get(setting, 'callUser', {});
 const statusInitial = parseInt(get(callUser, 'status', 0));
 const intercomInitial = {
   intercomId: 0,
-  remoteStaffId: '',
+  remoteStaffId: 0,
   remoteStaffName: '',
   intercomFlag: ''
 }
@@ -26,8 +26,9 @@ const initialState = {
   statusSelectDisabled: false,
   isAutoAnswerFirstTips: false,
   outCallRandom: get(callUser, 'outcallRandom', false),
-  restStatusSwitch: get(callUser, 'restStatusSwitch', 0),
+  outCallNumbers: [],
   outCallNumber: '',
+  restStatusSwitch: get(callUser, 'restStatusSwitch', 0),
   sessionMode: SessionMode.empty,
   callStatus: statusInitial === 7 ? 'process' : 'empty',
   jitterBuffer: 0,

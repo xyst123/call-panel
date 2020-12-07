@@ -118,6 +118,7 @@ export const getRes = (
     return {
       status: true,
       code,
+      data: res.result,
       msg: message[String(successCode)] || res.message || '',
     };
   }
@@ -125,7 +126,7 @@ export const getRes = (
   return {
     status: false,
     code,
-    data: res,
+    data: res.result,
     msg: message[String(code)] || res.message || message['-1'] || '',
   };
 };
@@ -133,14 +134,14 @@ export const getRes = (
 export const handleRes = (res: Common.IRes, successCallback: Function = Function.prototype, failCallback: Function = Function.prototype) => {
   const { status, msg } = res;
   if (status) {
-    const forbidAlert = successCallback(res.data);
-    if (msg && !forbidAlert) {
+    const shouldAlert = successCallback(res.data);
+    if (msg && shouldAlert) {
       message.success(msg);
     }
     return
   }
-  const forbidAlert = failCallback(res.data);
-  if (msg && !forbidAlert) {
+  const shouldAlert = failCallback(res.data);
+  if (msg && shouldAlert) {
     message.error(msg);
   }
 }

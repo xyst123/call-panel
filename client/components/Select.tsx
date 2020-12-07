@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { getType, iterateMatchDOM } from '@/utils';
 import '@/style/Select.less';
 
-export const Select: React.FC<any> = ({ defaultValue, disabled = false, onChange = Function.prototype, children, className }) => {
+export const Select: React.FC<any> = ({ defaultValue, disabled = false, overflowY = 'scroll', onChange = Function.prototype, children, className }) => {
   const [valueLabel, setValueLabel] = useState<Common.IValueLabel>({
     value: null, label: ''
   });
@@ -44,7 +44,7 @@ export const Select: React.FC<any> = ({ defaultValue, disabled = false, onChange
         <p>{valueLabel.label}</p>
         <i className="iconfont icon-triangle-down"></i>
       </div>
-      <ul className={`select-options select-options_${showOptions ? 'show' : 'hide'}`}>
+      <ul className={`select-options select-options_${showOptions ? 'show' : 'hide'}`} style={{ overflowY, maxHeight: overflowY === 'scroll' ? '300px' : 'auto' }}>
         {children.map((child: any) => {
           return React.cloneElement(child, {
             onOptionClick(result: Common.IValueLabel) {
@@ -57,7 +57,7 @@ export const Select: React.FC<any> = ({ defaultValue, disabled = false, onChange
           })
         })}
       </ul>
-    </div>
+    </div >
   );
 };
 

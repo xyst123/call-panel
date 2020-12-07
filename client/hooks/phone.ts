@@ -1,9 +1,9 @@
 import { useSelector, useDispatch } from 'react-redux';
-import { IPhoneStatus, IExtendedPhoneStatus, SessionMode, callStatusMap, seatStatusMap, TSeatStatus, restStatusMap, TRestStatus, PhoneMode } from '@/constant/phone';
+import { IPhoneStatus, IExtendedPhoneStatus, SessionMode, callStatusMap, seatStatusMap, TSeatStatus, restStatusMap, TRestStatus, PhoneMode, memberInitial } from '@/constant/phone';
 import { setting, ipccSetting } from '@/constant/outer';
-import { debug, handleRes, get, resetState } from '@/utils';
+import { debug, handleRes, get } from '@/utils';
 import { sipAdaptor } from '@/utils/sip';
-import { callOut, intercomCallOut, setStatus } from '@/service/phone';
+import { callOut, intercomCallOut, setStatus, joinConference, transfer } from '@/service/phone';
 // @ts-ignore
 import { message } from 'ppfish';
 
@@ -16,9 +16,9 @@ const getStatusText = (key: TSeatStatus, subKey: TRestStatus) => {
 
 export default (): {
   phone: IExtendedPhoneStatus, startCallOut: () => Promise<any>, handleCallOut: () => Promise<any>, startIntercomCallOut: (data: {
-    staffid: string,
+    staffid: number,
     name: string
-  }) => Promise<any>, handleIntercomCallOut: () => Promise<any>, handleCallTask: (callTaskData: any) => Promise<any>, startSetStatus: Function, phoneReset: Function
+  }) => Promise<any>, handleIntercomCallOut: (remoteStaffId: number) => Promise<any>, handleCallTask: (callTaskData: any) => Promise<any>, startSetStatus: Function, handleConference: (type: string, data: Common.IObject<any>) => Promise<any>, handleTransfer: (data: Common.IObject<any>) => Promise<any>, phoneReset: Function
 } => {
   const phone: IExtendedPhoneStatus = useSelector((state: {
     phone: IPhoneStatus;
@@ -43,7 +43,6 @@ export default (): {
     const res = await callOut(realDialNumber, outCallNumber);
     handleRes(res, () => {
       // TODO 处理拨号成功
-      return true
     }, () => {
       // 如果刚好有进线，那么不处理外呼失败提示
       if ((phone.isBusy && phone.callStatus !== 'callOut')) return true;
@@ -61,8 +60,6 @@ export default (): {
       })
 
       // TODO 通知页面头部
-
-      return true
     })
   }
 
@@ -113,7 +110,8 @@ export default (): {
     await handleCallOut();
   }
 
-  const handleIntercomCallOut = async () => {
+  const handleIntercomCallOut = async (remoteStaffId: number
+  ) => {
     if (!canCallOut)
       return message.error('电话服务需为在线或者挂起状态，才能内部呼叫', 5000);
     dispatch({
@@ -121,7 +119,6 @@ export default (): {
         sessionMode: SessionMode.intercom
       }
     })
-    const { remoteStaffId } = phone.intercom
 
     window.debug('[sendIntercomCallout]  staffId:%s', remoteStaffId);
 
@@ -137,7 +134,6 @@ export default (): {
     const res = await intercomCallOut(remoteStaffId);
     handleRes(res, () => {
       // TODO 处理拨号成功
-      return true
     }, () => {
       // 如果刚好有进线，那么不处理外呼失败提示
       if ((phone.isBusy && phone.callStatus !== 'callOut')) return true;
@@ -155,20 +151,18 @@ export default (): {
       })
 
       // TODO 通知页面头部
-
-      return true
     })
   }
 
   const startIntercomCallOut = async (data: {
-    staffid: string,
+    staffid: number,
     name: string
   }) => {
     // 软电话模式下检查sdk是否初始化完成
     if (phone.mode === 0 && sipAdaptor.status.code !== 0) return message.error(sipAdaptor.status.tip);
 
+    const { staffid: remoteStaffId, name: remoteStaffName } = data;
     if (canCallOut) {
-      const { staffid: remoteStaffId, name: remoteStaffName } = data;
       dispatch({
         type: 'PHONE_SET',
         payload: {
@@ -180,7 +174,7 @@ export default (): {
       })
     }
 
-    await handleIntercomCallOut()
+    await handleIntercomCallOut(remoteStaffId)
   }
 
   const handleCallTask = async (callTaskData: any) => {
@@ -275,13 +269,11 @@ export default (): {
         type: 'PHONE_SET',
         payload
       })
-
-      return true
     }, () => {
       const payload: Common.IObject<any> = {
         statusSelectDisabled: false,
       }
-      callback && callback(true);
+      callback && callback(false);
 
       // TODO changecallstatusfailed
       // me.$emit('changecallstatusfailed');
@@ -331,8 +323,6 @@ export default (): {
         type: 'PHONE_SET',
         payload
       })
-
-      return true
     })
 
     // TODO onstatusload
@@ -351,9 +341,9 @@ export default (): {
       debug(`[sendStatus] ${seatStatusMap[status].kickedText || '账号被踢'}`);
     }
 
-    const { mockManualSwitch, cbconfirm, value, type } = options;
+    const { mockManualSwitch, confirmCallback, value, type } = options;
     // auto为true表示自动发起的切换；为false表示是用户手动切换
-    const autoSwitch = mockManualSwitch ? !mockManualSwitch : !cbconfirm;
+    const autoSwitch = mockManualSwitch ? !mockManualSwitch : !confirmCallback;
     const [seatStatus, restStatus] = Array.isArray(value) ? value : [value, ''];
 
     debug(
@@ -374,14 +364,14 @@ export default (): {
       if (seatStatus == phone.status && !autoSwitch) return;
     }
     // 切换为离线，直接返回
-    if (seatStatus === 0) return handleSetStatus(seatStatus, restStatus, type, cbconfirm);
+    if (seatStatus === 0) return handleSetStatus(seatStatus, restStatus, type, confirmCallback);
     // sip话机和手机在线模式，直接切换状态
-    if (phone.mode !== PhoneMode.soft) return handleSetStatus(seatStatus, restStatus, type, cbconfirm);
+    if (phone.mode !== PhoneMode.soft) return handleSetStatus(seatStatus, restStatus, type, confirmCallback);
     // sdk初始化成功，直接切换状态
-    if (sipAdaptor.status.code === 0) return handleSetStatus(seatStatus, restStatus, type, cbconfirm);
+    if (sipAdaptor.status.code === 0) return handleSetStatus(seatStatus, restStatus, type, confirmCallback);
     const handleSIPError = () => {
-      if (cbconfirm) {
-        cbconfirm(false)
+      if (confirmCallback) {
+        confirmCallback(false)
       }
       message.error(sipAdaptor.status.tip);
     }
@@ -399,8 +389,77 @@ export default (): {
       if (sipAdaptor.status.code !== 0) {
         return handleSIPError()
       }
-      handleSetStatus(seatStatus, restStatus, type, cbconfirm);
+      handleSetStatus(seatStatus, restStatus, type, confirmCallback);
     }, 1000);
+  }
+
+  const handleConference = async (type: string, data: Common.IObject<any> = {}) => {
+    debug(`[${type}] data:%O`, data);
+    const { name: memberName } = data;
+    delete data.name;
+
+    const realData = {
+      ...data,
+      sid: phone.session.sessionId
+    }
+
+    // 主持坐席使用号码
+    const { outCallRandom, outCallNumber, outCallNumbers } = phone;
+    if (!outCallRandom) {
+      let selectedOutCallNumber = '';
+      if (outCallNumbers.length > 1) {
+        selectedOutCallNumber = outCallNumber;
+      } else if (outCallNumbers.length === 1) {
+        selectedOutCallNumber = outCallNumbers[0];
+      }
+      if (!selectedOutCallNumber) return message.error('请选择外呼号码');
+      Object.assign(realData, {
+        did: selectedOutCallNumber
+      })
+    }
+
+    // 清空上次多方会话信息
+    if (type === 'conference') {
+      dispatch({
+        type: 'PHONE_RESET',
+        payload: {
+          conference: true
+        }
+      })
+    }
+
+    const res = await joinConference(type, realData);
+    handleRes(res, (json: Common.IObject<any>) => {
+      const member = {
+        ...memberInitial,
+        id: json.member,
+        name: memberName,
+        time: (json.time || Date.now()) + 60 * 1000, // 1分钟自动挂断
+        state: 0
+      }
+      dispatch({
+        type: 'PHONE_SET',
+        payload: {
+          conference: {
+            members: {
+              ...phone.conference.members,
+              [member.id]: member
+            }
+          }
+        }
+      })
+    }, () => true)
+  }
+
+  const handleTransfer = async (data: Common.IObject<any> = {}) => {
+    debug('[sendTransfer] data:%O', data);
+    delete data.name;
+
+    const res = await transfer({
+      ...data,
+      sid: phone.session.sessionId
+    });
+    handleRes(res, () => true, () => true)
   }
 
   const phoneReset = () => {
@@ -419,5 +478,5 @@ export default (): {
     })
   }
 
-  return { phone, startCallOut, handleCallOut, startIntercomCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, phoneReset };
+  return { phone, startCallOut, handleCallOut, startIntercomCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, handleConference, handleTransfer, phoneReset };
 }

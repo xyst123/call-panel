@@ -6,6 +6,7 @@ import CallBusy from '@/pages/CallBusy';
 import { sipAdaptor } from '@/utils/sip';
 // @ts-ignore
 import { Modal, message } from 'ppfish';
+import IntercomModal from '@/pages/SelectModal';
 import { callStatusMap, PhoneMode } from '@/constant/phone';
 import { get, iterateObject } from '@/utils';
 import { setting } from '@/constant/outer';
@@ -137,6 +138,7 @@ const CallPanel: React.FC<any> = () => {
     <Modal {...global.modalConfig}>
       {global.modalConfig.children}
     </Modal>
+    <IntercomModal />
   </div>
 };
 

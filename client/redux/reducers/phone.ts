@@ -19,6 +19,7 @@ const conferenceInitial = {
   members: {},
 }
 const initialState = {
+  display: false,
   mode: get(callUser, 'mode', PhoneMode.soft),
   statusCached: statusInitial,
   status: statusInitial,

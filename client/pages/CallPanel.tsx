@@ -7,18 +7,18 @@ import { sipAdaptor } from '@/utils/sip';
 // @ts-ignore
 import { Modal, message } from 'ppfish';
 import IntercomModal from '@/pages/SelectModal';
-import { callStatusMap, PhoneMode } from '@/constant/phone';
+import { callStatusMap, PhoneMode,seatStatusMap } from '@/constant/phone';
 import { get, iterateObject } from '@/utils';
 import { setting } from '@/constant/outer';
 import { audioRingSound } from '@/constant/element';
-import usePhone from '@/hooks/phone';
+import usePhone,{handleCallOut} from '@/hooks/phone';
 import useGlobal from '@/hooks/global';
 import '@/style/CallPanel.less';
 
 const callUser = get(setting, 'callUser', {});
 
 const CallPanel: React.FC<any> = () => {
-  const { phone, handleCallOut } = usePhone();
+  const { phone } = usePhone();
   const { global } = useGlobal();
 
   const dispatch = useDispatch();
@@ -36,15 +36,6 @@ const CallPanel: React.FC<any> = () => {
       });
       audioRingSound.play();
     }
-  }
-
-  const toggleToolbar = (open: boolean) => {
-    dispatch({
-      type: 'TOOLBAR_SET',
-      payload: {
-        open
-      }
-    })
   }
 
   useEffect(() => {
@@ -91,9 +82,15 @@ const CallPanel: React.FC<any> = () => {
         }
 
         if (options.autocall && !hideNumber) {
-          handleCallOut();
+          handleCallOut(phone,dispatch)();
         }
-        toggleToolbar(true);
+
+        dispatch({
+          type: 'PHONE_SET',
+          payload: {
+            display: true
+          }
+        })
       },
       // 提示用户重启浏览器
       warning(options: any) {
@@ -130,15 +127,32 @@ const CallPanel: React.FC<any> = () => {
     }
   }, [])
 
+  const toggleDisplay = ()=>{
+    dispatch({
+      type: 'PHONE_SET',
+      payload: {
+        display: !phone.display
+      }
+    })
+  }
+
+  const currentStatus = seatStatusMap[phone.status];
+
   return <div className="call-panel">
-    <CallHeader></CallHeader>
-    {
-      phone.isBusy ? <CallBusy></CallBusy> : <CallDial></CallDial>
-    }
-    <Modal {...global.modalConfig}>
-      {global.modalConfig.children}
-    </Modal>
-    <IntercomModal />
+    <div className="call-panel-title" onClick={toggleDisplay}>
+      <i className={`iconfont icon-${currentStatus.icon}`} style={{ color: currentStatus.color }}></i>
+      <p>{currentStatus.text}</p>
+    </div>
+    <div className={`call-panel-main ${phone.display?'':'call-panel-main_close'}`}>
+      <CallHeader></CallHeader>
+      {
+        phone.isBusy ? <CallBusy></CallBusy> : <CallDial></CallDial>
+      }
+      <Modal {...global.modalConfig}>
+        {global.modalConfig.children}
+      </Modal>
+      <IntercomModal />
+    </div>
   </div>
 };
 

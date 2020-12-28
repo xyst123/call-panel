@@ -43,10 +43,11 @@ export const get = (object: any, props: string, defaultValue: any) => {
   return realProps.reduce((prevObject, prop) => {
     const curObject =
       prevObject[prop] === undefined ? defaultValue : prevObject[prop];
-    if (curObject instanceof Array) {
+    const type=getType(curObject);
+    if (type==='array') {
       return [...curObject];
     }
-    if (curObject instanceof Object) {
+    if (type==='object') {
       return { ...curObject };
     }
     return curObject;
@@ -227,7 +228,7 @@ export const delay = async <T>(
 ): Promise<T> => {
   await new Promise((resolve) => {
     setTimeout(() => {
-      resolve();
+      resolve(null);
     }, time);
   });
   return callback();

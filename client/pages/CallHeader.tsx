@@ -6,7 +6,7 @@ import { PhoneMode } from '@/constant/phone';
 import { setting, corpPermission } from '@/constant/outer';
 import { setPhoneMode, getOutCallNumbers } from '@/service/phone';
 import { get, debug, mapObject, handleRes, getStorage, setStorage } from '@/utils';
-import usePhone from '@/hooks/phone';
+import usePhone,{startSetStatus, startIntercomCallOut } from '@/hooks/phone';
 import useGlobal from '@/hooks/global';
 import '@/style/CallHeader.less';
 
@@ -27,7 +27,7 @@ const getNetworkLevel = (jitterBuffer: number): string => {
 }
 
 const CallHeader: React.FC<any> = () => {
-  const { phone, startSetStatus, startIntercomCallOut } = usePhone();
+  const { phone } = usePhone();
   const { global } = useGlobal();
   const [restStatus, setRestStatus] = useState<number>(defaultRestStatus);
 
@@ -111,7 +111,7 @@ const CallHeader: React.FC<any> = () => {
       type: 'GLOBAL_SET_SELECT_MODAL',
       payload: {
         type: 'intercom',
-        handler: startIntercomCallOut
+        handler: startIntercomCallOut(phone,dispatch)
       }
     })
   }
@@ -130,7 +130,7 @@ const CallHeader: React.FC<any> = () => {
         {jitterBuffer > 0 ? <i title={`当前通话网络延迟:${jitterBuffer}ms`} className={`u-icon-wifi line-network_${networkLevel}`}></i> : null}
         <i className="line-indicator" style={{ backgroundColor: seatStatusMap[phone.status].color }}></i>
         <Select className="line-statuses" defaultValue={phone.status} disabled={phone.statusSelectDisabled} overflowY='visible' onChange={(value: number | number[]) => {
-          startSetStatus({ value })
+          startSetStatus(phone,dispatch)({ value })
         }}>
           {softSelectOptions.map(option => {
             const currentStatus = seatStatusMap[option];

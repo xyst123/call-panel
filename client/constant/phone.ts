@@ -23,6 +23,7 @@ export enum SDKStatus {
 }
 
 export interface IPhoneStatus {
+  display: boolean,
   mode: PhoneMode,
   statusCached: number, // 缓存坐席状态
   status: number, // 坐席状态
@@ -77,6 +78,7 @@ export interface IPhoneStatus {
 export interface IExtendedPhoneStatus extends IPhoneStatus {
   isBusy: boolean,
   isRinging: boolean,
+  canCallOut: boolean,
 }
 
 // 电话客服在线状态

@@ -1,11 +1,48 @@
 @import url(./vars.less);
+@title-height: 58px;
 .call-panel {
-  .block-shadow;
-  z-index: 10000;
-  width: @panel-width;
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
   background-color: #fff;
-  border: @normal-border;
-  border-radius: 4px;
-  overflow: visible;
-  transition: visibility 0.2s linear, opacity 0.2s linear;
+  &-title {
+    display: flex;
+    align-items: center;
+    height: @title-height;
+    font-size: @font-small;
+    cursor: pointer;
+    i {
+      margin-right: 4px;
+      font-size: @font-normal;
+    }
+  }
+  &-main {
+    position: absolute;
+    top: @title-height;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: @panel-width;
+    border: @normal-border;
+    border-radius: 4px;
+    overflow: visible;
+    transition: visibility 0.2s linear, opacity 0.2s linear;
+    z-index: 1000;
+    .block-shadow;
+    &_close {
+      visibility: hidden;
+      opacity: 0;
+    }
+    &::before {
+      position: absolute;
+      top: -10px;
+      content: '';
+      border-top: 0px;
+      border-bottom: 10px solid @border-color;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+    }
+  }
 }

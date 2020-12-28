@@ -1,6 +1,7 @@
 import { get, assignState, resetState } from '@/utils';
 import { intercomModalMap, ModalType } from '@/constant/phone';
 const initialState = {
+  setting:get(window,'setting',{}),
   modalConfig: {
     visible: false,
     cancelButtonDisabled: false,

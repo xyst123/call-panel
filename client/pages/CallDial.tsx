@@ -5,7 +5,7 @@ import DialButtons from '@/pages/DialButtons';
 import { setting, ipccSetting } from '@/constant/outer';
 import { getSetting, callOut } from '@/service/phone';
 import { get, debug, mapObject, handleRes } from '@/utils';
-import usePhone from '@/hooks/phone';
+import usePhone,{startCallOut} from '@/hooks/phone';
 import '@/style/CallDial.less';
 
 const inputStyleMap: Common.IObject<React.CSSProperties> = {
@@ -21,7 +21,7 @@ const inputStyleMap: Common.IObject<React.CSSProperties> = {
 const disableToolbar = get(setting, 'isToolBar', false) && get(ipccSetting, 'disableToolbar', false);
 
 const CallDial: React.FC<any> = () => {
-  const { phone, startCallOut } = usePhone();
+  const { phone } = usePhone();
   const [disableUnsigned, setDisableUnsigned] = useState(false); // 需要签署安全协议的企业（未付费使用企业）是否禁用掉外呼功能
   const [callTaskData, setCallTaskData] = useState<null | object>(null);
   const input = useRef<HTMLInputElement>(null);
@@ -47,7 +47,7 @@ const CallDial: React.FC<any> = () => {
   const checkAndCall = async () => {
     if (disableToolbar) return; // 呼叫工具条暂时不让外呼
     setCallTaskData(null);
-    await startCallOut()
+    await startCallOut(phone,dispatch)()
   };
 
   useEffect(() => {

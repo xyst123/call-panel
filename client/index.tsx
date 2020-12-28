@@ -6,6 +6,7 @@ import store from '@/redux/store';
 import { get } from '@/utils';
 import { setting } from '@/constant/outer';
 import { audioRingSound } from '@/constant/element';
+import {handleCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, handleConference, handleTransfer, phoneReset } from '@/hooks/phone';
 
 import '@/style/reset.less';
 import '@/style/index.less';
@@ -52,9 +53,65 @@ window.debug = (type: string, ...args) => {
 
 audioRingSound.src = get(setting, 'user.call.ringUrl', '');
 
-ReactDOM.render(
-  <Provider store={store}>
-    <Routes />
-  </Provider>,
-  document.getElementById('root')
-);
+const {getState,dispatch}=store;
+
+const component= <Provider store={store}>
+  <Routes />
+</Provider>
+
+export const sendCall=(params?:Common.IObject<any>)=>{
+  handleCallOut(getState().phone,dispatch)(params)
+}
+
+export default component;
+
+class CallPanel{
+  constructor({root,setting={}}:{root:string,setting?:Common.IObject<any>}){
+    ReactDOM.render(
+      component,
+      document.getElementById(root)
+    );
+
+    this.setSetting(setting);
+
+    window.addEventListener('message',(event:MessageEvent)=>{
+      const {method, params} = event.data;
+      switch (method){
+        case 'setSetting':
+          this.setSetting(params)
+          break;
+        case 'setDisplay':
+          this.setDisplay(params)
+          break;
+        case 'sendCall':
+          this.sendCall(params)
+          break;
+        default:
+      }
+    })
+  }
+
+  setSetting(setting?:Common.IObject<any>){
+    if(setting){
+      dispatch({
+        type: 'GLOBAL_SET',
+        payload: {setting}
+      })
+    }
+  }
+
+  setDisplay(display:boolean){
+    dispatch({
+      type: 'PHONE_SET',
+      payload: {display}
+    })
+  }
+
+  sendCall(params?:Common.IObject<any>){
+    sendCall(params)
+  }
+}
+
+(window as any).CallPanel=CallPanel;
+
+

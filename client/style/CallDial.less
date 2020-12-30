@@ -22,19 +22,12 @@
     }
   }
   @size: 50px;
-  &-call {
+  & > &-call {
+    .radius-button;
     margin: 24px 0;
-    border: none;
-    outline: none;
-    background-color: @background-color-call;
-    height: @size;
-    width: @size;
-    border-radius: 50%;
-    font-size: 20px !important;
-    color: #fff;
-    cursor: pointer;
+    color: @background-color-call;
     &_disabled {
-      background-color: @background-color-call-disabled;
+      color: @background-color-call-disabled;
       cursor: not-allowed;
     }
   }

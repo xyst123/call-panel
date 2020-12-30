@@ -22,6 +22,14 @@ export enum SDKStatus {
   connectingNotReady,
 }
 
+export interface IMember {
+  member: string,
+  memberName: string,
+  state: 0 | 1,
+  isChairman: boolean,
+  mute: 0 | 1,
+}
+
 export interface IPhoneStatus {
   display: boolean,
   mode: PhoneMode,
@@ -62,7 +70,7 @@ export interface IPhoneStatus {
     chairmanName: string,
     tip: string, // 信息标识
     conferenceId: string,
-    members: any,
+    members: Common.IObject<IMember>,
   },
   // 外部通话-会话相关
   session: {
@@ -95,12 +103,11 @@ export const seatStatusMap: {
   [key: number]: IStatus;
 } = {
   0: { text: '离线', value: 0, icon: 'kfzt-lxx', color: '#b6b6b6', modalStatus: 'disabled' },
-  1: { text: '在线', value: 1, icon: 'kfzt-zxx', color: '#53c251', modalIcon: 'kfOnline' },  //web在线
+  1: { text: '在线', value: 1, icon: 'kfzt-zxx', color: '#53c251', modalIcon: 'kfOnline' },  // web在线
   2: { text: '小休', value: 2, icon: 'kfzt-xxx', color: '#f8a755', modalIcon: 'kfRest', modalStatus: 'busy' },
   3: { text: '通话中', value: 3, icon: 'kfzt-thzx', color: '#53c251', kickedText: '通话中被踢', modalIcon: 'kfBusy', modalStatus: 'busy' },
   4: { text: '手机在线', value: 4, icon: 'phonex', color: '#53c251', modalIcon: 'mobile', modalStatus: 'disabled' },
-  // SIP话机在线
-  5: { text: '在线', value: 5, icon: 'kfzt-zxx', color: '#53c251', modalIcon: 'kfOnline' },  //sip话机在线
+  5: { text: '在线', value: 5, icon: 'kfzt-zxx', color: '#53c251', modalIcon: 'kfOnline' }, // SIP话机在线
   6: { text: '挂起', value: 6, icon: 'kfzt-gqx', color: '#b6b6b6', modalIcon: 'kfHangup', modalStatus: 'busy' },
   7: { text: '处理中', value: 7, icon: 'kfzt-jxzx', color: '#53c251', kickedText: '处理中被踢', modalIcon: 'kfBusy', modalStatus: 'busy' },
   8: { text: '自动外呼', value: 8, icon: 'kfzt-zdwhx', color: '#53c251', modalIcon: 'kfForecast', modalStatus: 'busy' },
@@ -194,7 +201,7 @@ export enum TabKey {
   other
 }
 
-export const intercomModalMap = {
+export const modalMap = {
   intercom: {
     text: '选择内部通话对象',
     tabs: [{
@@ -242,4 +249,4 @@ export const intercomModalMap = {
   },
 }
 
-export type ModalType = keyof typeof intercomModalMap;
+export type ModalType = keyof typeof modalMap;

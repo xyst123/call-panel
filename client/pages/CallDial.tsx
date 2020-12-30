@@ -5,7 +5,7 @@ import DialButtons from '@/pages/DialButtons';
 import { setting, ipccSetting } from '@/constant/outer';
 import { getSetting, callOut } from '@/service/phone';
 import { get, debug, mapObject, handleRes } from '@/utils';
-import usePhone,{startCallOut} from '@/hooks/phone';
+import usePhone, { startCallOut } from '@/hooks/phone';
 import '@/style/CallDial.less';
 
 const inputStyleMap: Common.IObject<React.CSSProperties> = {
@@ -47,7 +47,7 @@ const CallDial: React.FC<any> = () => {
   const checkAndCall = async () => {
     if (disableToolbar) return; // 呼叫工具条暂时不让外呼
     setCallTaskData(null);
-    await startCallOut(phone,dispatch)()
+    await startCallOut(phone, dispatch)()
   };
 
   useEffect(() => {
@@ -75,7 +75,7 @@ const CallDial: React.FC<any> = () => {
         }
       });
     }} style={{ marginTop: '12px' }}></DialButtons>
-    <button className={`call-dial-call iconfont icon-call ${(disableToolbar || disableUnsigned) ? 'call-dial-call_disabled' : ''}`} onClick={checkAndCall}></button>
+    <button className={`call-dial-call iconfont icon-hangup ${(disableToolbar || disableUnsigned) ? 'call-dial-call_disabled' : ''}`} onClick={checkAndCall}></button>
   </div>
 };
 

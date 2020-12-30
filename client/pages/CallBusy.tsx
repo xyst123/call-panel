@@ -3,7 +3,7 @@ import { SessionMode, PhoneMode, callStatusMap } from '@/constant/phone';
 import DialButtons from '@/pages/DialButtons';
 import { get, hidePhoneNumber } from '@/utils';
 import { sipAdaptor } from '@/utils/sip';
-import usePhone, {handleCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, handleConference, handleTransfer, phoneReset } from '@/hooks/phone';
+import usePhone, { handleCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, handleConference, handleTransfer, phoneReset } from '@/hooks/phone';
 import { setting, corpPermission } from '@/constant/outer';
 import { audioConnectSound, audioHangupSound, audioRingSound } from '@/constant/element';
 import { sessionCheck, intercomMute, intercomUnmute, mute, unmute } from '@/service/phone';
@@ -14,7 +14,7 @@ import '@/style/CallBusy.less';
 const callUser = get(setting, 'callUser', {});
 
 const CallBusy: React.FC<any> = () => {
-  const { phone} = usePhone();
+  const { phone } = usePhone();
   const [extNumber, setExtNumber] = useState('');
   const [showDial, setShowDial] = useState(false);
   const countDownTimer = useRef<NodeJS.Timeout | null>(null);
@@ -58,6 +58,7 @@ const CallBusy: React.FC<any> = () => {
     show: boolean,
     icon: string,
     color?: string,
+    size?: number,
     text: string,
     handler: any,
   }
@@ -86,7 +87,7 @@ const CallBusy: React.FC<any> = () => {
       // 解决因为外呼异常，无法挂机的问题
       // 1s后如果还是没能正常挂机，强制恢复状态
       if (phone.isBusy && phone.callStatus === 'callOut') {
-        phoneReset(phone,dispatch)()
+        phoneReset(phone, dispatch)()
       }
     }, 1000);
   };
@@ -178,7 +179,7 @@ const CallBusy: React.FC<any> = () => {
         handler() {
           dispatch({
             type: 'GLOBAL_SET_SELECT_MODAL',
-            payload: { type: 'transfer', handler: handleTransfer(phone,dispatch) }
+            payload: { type: 'transfer', handler: handleTransfer(phone, dispatch) }
           })
         },
       },
@@ -189,7 +190,7 @@ const CallBusy: React.FC<any> = () => {
         handler() {
           dispatch({
             type: 'GLOBAL_SET_SELECT_MODAL',
-            payload: { type: 'conference', handler: handleConference(phone,dispatch).bind(null, 'create') }
+            payload: { type: 'conference', handler: handleConference(phone, dispatch).bind(null, 'create') }
           })
         },
       },
@@ -222,12 +223,12 @@ const CallBusy: React.FC<any> = () => {
         color: 'green',
         text: '重拨',
         handler() {
-          if (phone.callTaskData) { handleCallTask(phone,dispatch)(phone.callTaskData); }
+          if (phone.callTaskData) { handleCallTask(phone, dispatch)(phone.callTaskData); }
           else {
             if (phone.sessionMode === SessionMode.intercom) {
-              handleIntercomCallOut(phone,dispatch)(phone.intercom.remoteStaffId);
+              handleIntercomCallOut(phone, dispatch)(phone.intercom.remoteStaffId);
             } else {
-              handleCallOut(phone,dispatch)();
+              handleCallOut(phone, dispatch)();
             }
           }
         },
@@ -309,7 +310,7 @@ const CallBusy: React.FC<any> = () => {
         text: '完成处理',
         async handler() {
           debug("[overprocess] callUser %O", callUser);
-          startSetStatus(phone,dispatch)({
+          startSetStatus(phone, dispatch)({
             value: [callUser.settedStatus, callUser.settedStatusExt],
             type: 'over-process',
           });
@@ -330,8 +331,9 @@ const CallBusy: React.FC<any> = () => {
     callOut: [
       {
         show: phone.mode !== PhoneMode.sip,
-        icon: 'callout',
+        icon: 'hangup',
         color: '#ff767d',
+        size: 50,
         text: '',
         handler: handleBye
       },
@@ -339,7 +341,7 @@ const CallBusy: React.FC<any> = () => {
   };
 
   const renderIconButton = (button: IIconButton, id: string) => button.show ? <li key={id} className="icon-buttons-item" onClick={button.handler}>
-    <i className={`iconfont icon-${button.icon}`} style={button.color ? { color: button.color } : {}}></i>
+    <i className={`iconfont icon-${button.icon}`} style={{ color: button.color || '#939393', fontSize: `${button.size || 22}px` }}></i>
     {button.text ? <p>{button.text}</p> : null}
   </li> : null;
 

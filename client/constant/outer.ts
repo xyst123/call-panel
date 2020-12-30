@@ -23,9 +23,9 @@ export const setting = {
 export const corpPermission = {
   CALLCENTER_CONFERENCE: true,
   IPCC_INEER_CALL: true,
-
 }
 
 export const ipccSetting = {
-  disableToolbar: false
+  disableToolbar: false,
+  enabledThirdPlatform: 1
 }

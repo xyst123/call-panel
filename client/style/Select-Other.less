@@ -1,10 +1,15 @@
 @import url(./vars.less);
 .select-other {
   flex: 1;
-  &-content {
-    border: 1px solid #ccc;
-    border-radius: 2px;
-    padding: 23px 31px;
+  border: 1px solid #cccccc;
+  border-radius: 2px;
+  padding: 23px 31px;
+
+  &-options {
+    margin-bottom: 10px;
+  }
+
+  &-input {
     & > p {
       color: @font-color-shallow;
       line-height: 16px;
@@ -24,6 +29,28 @@
         width: 340px;
         margin-left: 10px;
         font-size: @font-small;
+      }
+    }
+  }
+  &-select {
+    overflow-y: scroll;
+    color: @font-color-normal;
+    @item-height: 24px;
+    li {
+      display: inline-flex;
+      width: 212px;
+      height: @item-height;
+      line-height: @item-height;
+      cursor: pointer;
+      span:first-child {
+        display: inline-block;
+        max-width: 50%;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      &.selected {
+        color: @primary-color;
       }
     }
   }

@@ -1,7 +1,8 @@
 import { get, assignState, resetState } from '@/utils';
-import { intercomModalMap, ModalType } from '@/constant/phone';
+import { modalMap, ModalType } from '@/constant/phone';
 const initialState = {
-  setting:get(window,'setting',{}),
+  isToolBar: false,
+  setting: get(window, 'setting', {}),
   modalConfig: {
     visible: false,
     cancelButtonDisabled: false,
@@ -34,7 +35,7 @@ export const global = (
         selectModalConfig: {
           visible: true,
           type,
-          ...intercomModalMap[type as ModalType],
+          ...modalMap[type as ModalType],
           handler,
         }
       }

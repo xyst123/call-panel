@@ -3,15 +3,16 @@ import { useDispatch } from 'react-redux';
 import CallHeader from '@/pages/CallHeader';
 import CallDial from '@/pages/CallDial';
 import CallBusy from '@/pages/CallBusy';
+import CallConference from '@/pages/CallConference';
 import { sipAdaptor } from '@/utils/sip';
 // @ts-ignore
 import { Modal, message } from 'ppfish';
 import IntercomModal from '@/pages/SelectModal';
-import { callStatusMap, PhoneMode,seatStatusMap } from '@/constant/phone';
+import { callStatusMap, PhoneMode, seatStatusMap } from '@/constant/phone';
 import { get, iterateObject } from '@/utils';
 import { setting } from '@/constant/outer';
 import { audioRingSound } from '@/constant/element';
-import usePhone,{handleCallOut} from '@/hooks/phone';
+import usePhone, { handleCallOut } from '@/hooks/phone';
 import useGlobal from '@/hooks/global';
 import '@/style/CallPanel.less';
 
@@ -82,7 +83,7 @@ const CallPanel: React.FC<any> = () => {
         }
 
         if (options.autocall && !hideNumber) {
-          handleCallOut(phone,dispatch)();
+          handleCallOut(phone, dispatch)();
         }
 
         dispatch({
@@ -127,7 +128,7 @@ const CallPanel: React.FC<any> = () => {
     }
   }, [])
 
-  const toggleDisplay = ()=>{
+  const toggleDisplay = () => {
     dispatch({
       type: 'PHONE_SET',
       payload: {
@@ -138,16 +139,20 @@ const CallPanel: React.FC<any> = () => {
 
   const currentStatus = seatStatusMap[phone.status];
 
+  const getMain = () => {
+    if (phone.callStatus === 'conference') return <CallConference />;
+    if (phone.isBusy) return <CallBusy></CallBusy>
+    return <CallDial></CallDial>
+  }
+
   return <div className="call-panel">
     <div className="call-panel-title" onClick={toggleDisplay}>
       <i className={`iconfont icon-${currentStatus.icon}`} style={{ color: currentStatus.color }}></i>
       <p>{currentStatus.text}</p>
     </div>
-    <div className={`call-panel-main ${phone.display?'':'call-panel-main_close'}`}>
+    <div className={`call-panel-main ${phone.display ? '' : 'call-panel-main_close'}`}>
       <CallHeader></CallHeader>
-      {
-        phone.isBusy ? <CallBusy></CallBusy> : <CallDial></CallDial>
-      }
+      {getMain()}
       <Modal {...global.modalConfig}>
         {global.modalConfig.children}
       </Modal>

@@ -19,11 +19,11 @@ const conferenceInitial = {
   members: {},
 }
 const initialState = {
-  display: false,
+  display: true,
   mode: get(callUser, 'mode', PhoneMode.soft),
   statusCached: statusInitial,
   status: statusInitial,
-  statusExt: parseInt(get(callUser, 'statusExt', 0)),
+  statusExt: statusInitial === 2 ? parseInt(get(callUser, 'statusExt', 0)) : 0,
   statusSelectDisabled: false,
   isAutoAnswerFirstTips: false,
   outCallRandom: get(callUser, 'outcallRandom', false),

@@ -1,5 +1,5 @@
 import { request, getRes } from '@/utils';
-import { seatStatusMap, groupStatusMap, PhoneMode } from '@/constant/phone';
+import { seatStatusMap, groupStatusMap, PhoneMode, IMember } from '@/constant/phone';
 
 export const setPhoneMode = async (
   mode: PhoneMode,
@@ -290,3 +290,46 @@ export const transfer = async (data: Common.IObject<any>): Promise<Common.IRes> 
   }
 };
 
+export const getThirdList = async (): Promise<Common.IRes> => {
+  const message = {};
+  try {
+    const response = await request<Common.IObject<any>>({
+      method: 'GET',
+      url: `/api/callcenter/settings/thirdplatform/list`,
+    });
+    const res = getRes(response, message);
+    return res
+  } catch (error) {
+    return getRes(error, message);
+  }
+};
+
+export const muteMember = async (type: string, data: Common.IObject<any>): Promise<Common.IRes> => {
+  const message = {};
+  try {
+    const response = await request<Common.IObject<any>>({
+      method: 'POST',
+      url: `/api/callcenter/conference/${type}`,
+      data
+    });
+    const res = getRes(response, message);
+    return res
+  } catch (error) {
+    return getRes(error, message);
+  }
+};
+
+export const deleteMember = async (data: Common.IObject<any>): Promise<Common.IRes> => {
+  const message = {};
+  try {
+    const response = await request<Common.IObject<any>>({
+      method: 'POST',
+      url: `/api/callcenter/conference/delmember`,
+      data
+    });
+    const res = getRes(response, message);
+    return res
+  } catch (error) {
+    return getRes(error, message);
+  }
+};

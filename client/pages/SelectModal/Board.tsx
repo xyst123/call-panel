@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-// @ts-ignore
 import { Icon } from 'ppfish';
 import { ISeat, IGroup } from '@/constant/phone';
 import '@/style/Select-Board.less';
@@ -16,20 +15,20 @@ const typeMap = {
     textMaxWidth: 86
   }
 }
-type DataType = keyof typeof typeMap;
 
-const Board: React.FC<any> = ({ type, selected, list, loading, emptyText, onSelect }: {
-  type: DataType,
+const Board: React.FC<{
+  type: keyof typeof typeMap,
   selected: ISeat | IGroup | null,
   list: ISeat[] | IGroup[],
   loading: boolean,
   emptyText: string,
   onSelect: Function
-}) => {
-  if (loading) return <div className="select-board"><Icon type="load-line" spinning={true} /></div>;
+  [key: string]: any;
+}> = ({ type, selected, list, loading, emptyText, onSelect, ...props }) => {
+  if (loading) return <div className="select-board" {...props}><Icon type="load-line" spinning={true} /></div>;
 
   if (list.length) {
-    return <div className="select-board">
+    return <div className="select-board" {...props}>
       <ul>
         {
           ((list as any[])).map(item => {
@@ -48,7 +47,7 @@ const Board: React.FC<any> = ({ type, selected, list, loading, emptyText, onSele
     </div >
   }
 
-  return <p className="select-text">
+  return <p className="select-text" {...props}>
     <i className="iconfont icon-tishixinxi"></i>
     <span>{emptyText}</span>
   </p>

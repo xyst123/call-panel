@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useDispatch } from 'react-redux';
-// @ts-ignore
 import { Modal, Tabs } from 'ppfish';
 import Seat from '@/pages/SelectModal/Seat';
 import Group from '@/pages/SelectModal/Group';
@@ -12,19 +11,24 @@ import { TabKey, ISeat, IGroup, IIVR } from '@/constant/phone';
 import useGlobal from '@/hooks/global';
 import '@/style/Select-Modal.less';
 
+interface ICallbackMap {
+  reset: Function,
+  reload: Function,
+}
+
 const { TabPane } = Tabs;
 
-const IntercomModal: React.FC<any> = () => {
+const IntercomModal: React.FC<Common.IObject<any>> = () => {
   const { global } = useGlobal();
   const [tabKey, setTabKey] = useState(TabKey.seat);
   const [seat, setSeat] = useState<ISeat | null>(null);
   const [group, setGroup] = useState<IGroup | null>(null);
   const [ivr, setIVR] = useState<IIVR | null>(null);
   const [phoneNumber, setPhoneNumber] = useState('');
-  const SeatRef = useRef<RefObject<any>>(null);
-  const GroupRef = useRef<RefObject<any>>(null);
-  const GroupSeatRef = useRef<RefObject<any>>(null);
-  const IVRRef = useRef<RefObject<any>>(null);
+  const SeatRef = useRef<ICallbackMap>(null);
+  const GroupRef = useRef<ICallbackMap>(null);
+  const GroupSeatRef = useRef<ICallbackMap>(null);
+  const IVRRef = useRef<ICallbackMap>(null);
 
   const { visible, text, tabs, handler } = global.selectModalConfig;
 
@@ -57,14 +61,11 @@ const IntercomModal: React.FC<any> = () => {
     [TabKey.seat]: {
       key: String(TabKey.seat),
       onReload() {
-        // @ts-ignore
-        SeatRef.current?.reload();
+        (SeatRef.current as ICallbackMap)?.reload();
       },
       onCurrent() {
-        // @ts-ignore
-        GroupRef.current?.reset();
-        // @ts-ignore
-        GroupSeatRef.current?.reset();
+        (GroupRef.current as ICallbackMap)?.reset();
+        (GroupSeatRef.current as ICallbackMap)?.reset();
       },
       okButtonDisabled: !seat,
       content: <Seat seat={seat} childRef={SeatRef} onSelect={selectSeat} />
@@ -72,12 +73,10 @@ const IntercomModal: React.FC<any> = () => {
     [TabKey.group]: {
       key: String(TabKey.group),
       onReload() {
-        // @ts-ignore
-        GroupRef.current?.reload();
+        (GroupRef.current as ICallbackMap)?.reload();
       },
       onCurrent() {
-        // @ts-ignore
-        SeatRef.current?.reset();
+        (SeatRef.current as ICallbackMap)?.reset();
       },
       okButtonDisabled: !group,
       content: <Group group={group} childRef={GroupRef} onSelect={selectGroup} />
@@ -85,12 +84,10 @@ const IntercomModal: React.FC<any> = () => {
     [TabKey.groupSeat]: {
       key: String(TabKey.groupSeat),
       onReload() {
-        // @ts-ignore
-        GroupSeatRef.current?.reload();
+        (GroupSeatRef.current as ICallbackMap)?.reload();
       },
       onCurrent() {
-        // @ts-ignore
-        SeatRef.current?.reset();
+        (SeatRef.current as ICallbackMap)?.reset();
       },
       okButtonDisabled: !seat,
       content: <GroupSeat seat={seat} childRef={GroupSeatRef} onSelect={selectSeat} />
@@ -98,8 +95,7 @@ const IntercomModal: React.FC<any> = () => {
     [TabKey.ivr]: {
       key: String(TabKey.ivr),
       onReload() {
-        // @ts-ignore
-        IVRRef.current?.reload();
+        (IVRRef.current as ICallbackMap)?.reload();
       },
       onCurrent() { },
       okButtonDisabled: !ivr,

@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-// @ts-ignore
 import DialButtons from '@/pages/DialButtons';
 import { setting, ipccSetting } from '@/constant/outer';
 import { getSetting, callOut } from '@/service/phone';
-import { get, debug, mapObject, handleRes } from '@/utils';
+import { get, mapObject, handleRes } from '@/utils';
 import usePhone, { startCallOut } from '@/hooks/phone';
 import '@/style/CallDial.less';
 
@@ -20,7 +19,7 @@ const inputStyleMap: Common.IObject<React.CSSProperties> = {
 }
 const disableToolbar = get(setting, 'isToolBar', false) && get(ipccSetting, 'disableToolbar', false);
 
-const CallDial: React.FC<any> = () => {
+const CallDial: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
   const [disableUnsigned, setDisableUnsigned] = useState(false); // 需要签署安全协议的企业（未付费使用企业）是否禁用掉外呼功能
   const [callTaskData, setCallTaskData] = useState<null | object>(null);

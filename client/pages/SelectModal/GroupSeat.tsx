@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, useImperativeHandle } from 'react';
-// @ts-ignore
 import { Select } from 'ppfish';
 import { ISeat, IGroup } from '@/constant/phone';
 import { getSeats, } from '@/service/phone';
@@ -10,11 +9,12 @@ import { handleRes, get } from '@/utils';
 const { Option: SelectOption } = Select;
 const allGroupsText = '所有客服组';
 
-const Group: React.FC<any> = ({ seat, childRef, onSelect }: {
-  seat: ISeat
+const Group: React.FC<{
+  seat: ISeat | null
   childRef: React.RefObject<any>
-  onSelect: Function
-}) => {
+  onSelect: Function,
+  [key: string]: any;
+}> = ({ seat, childRef, onSelect, ...props }) => {
   const [seats, setSeats] = useState<ISeat[]>([]);
   const [loading, setLoading] = useState(false);
   const [groups, setGroups] = useState<IGroup[]>([]);

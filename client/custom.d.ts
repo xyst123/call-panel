@@ -1,7 +1,16 @@
+declare module 'ppfish';
+
 interface Window {
-  debug: Function
+  debug: Function,
+  CallPanel: any,
+  cefQuery: boolean,
+  QiyuConnect: any
 }
 declare let debug: Window["debug"];
+
+interface Promise {
+  abort: Function | null,
+}
 
 declare namespace Common {
   interface IRes {

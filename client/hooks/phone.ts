@@ -4,7 +4,6 @@ import { setting, ipccSetting } from '@/constant/outer';
 import { debug, handleRes, get } from '@/utils';
 import { sipAdaptor } from '@/utils/sip';
 import { callOut, intercomCallOut, setStatus, joinConference, transfer } from '@/service/phone';
-// @ts-ignore
 import { message } from 'ppfish';
 
 const getStatusText = (key: TSeatStatus, subKey: TRestStatus) => {
@@ -19,7 +18,7 @@ const showSecurityBookModal = () => {
 
 }
 
-const callOutRequest =(phone:IExtendedPhoneStatus,dispatch:Function)=> async (realDialNumber: string, outCallNumber: string,callback=Function.prototype) => {
+const callOutRequest = (phone: IExtendedPhoneStatus, dispatch: Function) => async (realDialNumber: string, outCallNumber: string, callback = Function.prototype) => {
   const res = await callOut(realDialNumber, outCallNumber);
   handleRes(res, () => {
     callback();
@@ -43,17 +42,17 @@ const callOutRequest =(phone:IExtendedPhoneStatus,dispatch:Function)=> async (re
   })
 }
 
-export const handleCallOut =(phone:IExtendedPhoneStatus,dispatch:Function)=> async (options?:Common.IObject<any>) => {
+export const handleCallOut = (phone: IExtendedPhoneStatus, dispatch: Function) => async (options?: Common.IObject<any>) => {
   // 软电话模式下检查sdk是否初始化完成
   if (phone.mode === 0 && sipAdaptor.status.code !== 0) return message.error(sipAdaptor.status.tip);
 
-  const realDialNumber = get(options,'phone',phone.dialingNumber).trim();
+  const realDialNumber = get(options, 'phone', phone.dialingNumber).trim();
 
   if (!realDialNumber) return message.error('电话号码不正确，请重新输入');
 
   if (!phone.canCallOut) return message.error('电话服务需为在线或者挂起状态，才可外呼客户');
 
-  if (phone.isBusy && phone.callStatus!=='callFail') return message.error('当前正在通话，不允许外呼');
+  if (phone.isBusy && phone.callStatus !== 'callFail') return message.error('当前正在通话，不允许外呼');
 
   dispatch({
     type: 'PHONE_SET',
@@ -71,17 +70,17 @@ export const handleCallOut =(phone:IExtendedPhoneStatus,dispatch:Function)=> asy
   dispatch({
     type: 'PHONE_SET',
     payload: {
-      display:options?true:phone.display,
+      display: options ? true : phone.display,
       speakingNumber: realDialNumber,
       callStatus: 'callOut',
       tip: callStatusMap.callOut
     }
   })
 
-  await callOutRequest(phone,dispatch)(realDialNumber, outCallNumber,get(options,'cb',Function.prototype))
+  await callOutRequest(phone, dispatch)(realDialNumber, outCallNumber, get(options, 'cb', Function.prototype))
 }
 
-export const startCallOut =(phone:IExtendedPhoneStatus,dispatch:Function)=> async () => {
+export const startCallOut = (phone: IExtendedPhoneStatus, dispatch: Function) => async () => {
   const disableToolbar = get(setting, 'isToolBar', false) && get(ipccSetting, 'disableToolbar', false);
   if (disableToolbar) return;
 
@@ -91,10 +90,10 @@ export const startCallOut =(phone:IExtendedPhoneStatus,dispatch:Function)=> asyn
     }
   })
 
-  await handleCallOut(phone,dispatch)();
+  await handleCallOut(phone, dispatch)();
 }
 
-export const handleIntercomCallOut =(phone:IExtendedPhoneStatus,dispatch:Function)=> async (remoteStaffId: number
+export const handleIntercomCallOut = (phone: IExtendedPhoneStatus, dispatch: Function) => async (remoteStaffId: number
 ) => {
   if (!phone.canCallOut)
     return message.error('电话服务需为在线或者挂起状态，才能内部呼叫', 5000);
@@ -138,7 +137,7 @@ export const handleIntercomCallOut =(phone:IExtendedPhoneStatus,dispatch:Functio
   })
 }
 
-export const startIntercomCallOut =(phone:IExtendedPhoneStatus,dispatch:Function)=> async (data: {
+export const startIntercomCallOut = (phone: IExtendedPhoneStatus, dispatch: Function) => async (data: {
   staffid: number,
   name: string
 }) => {
@@ -158,10 +157,10 @@ export const startIntercomCallOut =(phone:IExtendedPhoneStatus,dispatch:Function
     })
   }
 
-  await handleIntercomCallOut(phone,dispatch)(remoteStaffId)
+  await handleIntercomCallOut(phone, dispatch)(remoteStaffId)
 }
 
-export const handleCallTask =(phone:IExtendedPhoneStatus,dispatch:Function)=>  async (callTaskData: any) => {
+export const handleCallTask = (phone: IExtendedPhoneStatus, dispatch: Function) => async (callTaskData: any) => {
   const { phone: dialNumber, did: outCallNumber } = callTaskData.param;
   dispatch({
     type: 'PHONE_SET',
@@ -176,7 +175,7 @@ export const handleCallTask =(phone:IExtendedPhoneStatus,dispatch:Function)=>  a
   await callOutRequest(dialNumber, outCallNumber)
 }
 
-const handleSetStatus =(phone:IExtendedPhoneStatus,dispatch:Function)=>  async (seatStatus: TSeatStatus, restStatus: TRestStatus, type: string, callback: Function) => {
+const handleSetStatus = (phone: IExtendedPhoneStatus, dispatch: Function) => async (seatStatus: TSeatStatus, restStatus: TRestStatus, type: string, callback: Function) => {
   const data = { status: String(seatStatus), statusExt: restStatus ? String(restStatus) : undefined };
   const statusText = seatStatus === 2 ? '小休' : '挂起';
 
@@ -311,7 +310,7 @@ const handleSetStatus =(phone:IExtendedPhoneStatus,dispatch:Function)=>  async (
   // });
 }
 
-export const startSetStatus =(phone:IExtendedPhoneStatus,dispatch:Function)=>  async (options: Common.IObject<any>) => {
+export const startSetStatus = (phone: IExtendedPhoneStatus, dispatch: Function) => async (options: Common.IObject<any>) => {
   if (phone.kickedOut) {
     const status = get(setting, 'callUser.status', 0);
     if (options.value || status) {
@@ -342,7 +341,7 @@ export const startSetStatus =(phone:IExtendedPhoneStatus,dispatch:Function)=>  a
   } else {
     if (seatStatus == phone.status && !autoSwitch) return;
   }
-  const setStatus=handleSetStatus(phone,dispatch)
+  const setStatus = handleSetStatus(phone, dispatch)
   // 切换为离线，直接返回
   if (seatStatus === 0) return setStatus(seatStatus, restStatus, type, confirmCallback);
   // sip话机和手机在线模式，直接切换状态
@@ -373,7 +372,7 @@ export const startSetStatus =(phone:IExtendedPhoneStatus,dispatch:Function)=>  a
   }, 1000);
 }
 
-export const handleConference =(phone:IExtendedPhoneStatus,dispatch:Function)=>  async (type: string, data: Common.IObject<any> = {}) => {
+export const handleConference = (phone: IExtendedPhoneStatus, dispatch: Function) => async (type: string, data: Common.IObject<any> = {}) => {
   debug(`[${type}] data:%O`, data);
   const { name: memberName } = data;
   delete data.name;
@@ -431,7 +430,7 @@ export const handleConference =(phone:IExtendedPhoneStatus,dispatch:Function)=> 
   }, () => true)
 }
 
-export const handleTransfer =(phone:IExtendedPhoneStatus,dispatch:Function)=>  async (data: Common.IObject<any> = {}) => {
+export const handleTransfer = (phone: IExtendedPhoneStatus, dispatch: Function) => async (data: Common.IObject<any> = {}) => {
   debug('[sendTransfer] data:%O', data);
   delete data.name;
 
@@ -442,7 +441,7 @@ export const handleTransfer =(phone:IExtendedPhoneStatus,dispatch:Function)=>  a
   handleRes(res, () => true, () => true)
 }
 
-export const phoneReset =(phone:IExtendedPhoneStatus,dispatch:Function)=>  () => {
+export const phoneReset = (phone: IExtendedPhoneStatus, dispatch: Function) => () => {
   dispatch({
     type: 'PHONE_RESET',
     payload: {
@@ -469,7 +468,7 @@ export default (): {
     return Object.assign(phone, {
       isBusy: phone.callStatus !== 'empty',
       isRinging: ['callIn', 'callOut', 'joinIn'].includes(phone.callStatus),
-      canCallOut:[1, 5, 6].includes(phone.status) // 可外呼状态
+      canCallOut: [1, 5, 6].includes(phone.status) // 可外呼状态
     })
   });
 

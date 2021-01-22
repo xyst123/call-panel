@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, useImperativeHandle, ChangeEvent } from 'react';
-// @ts-ignore
 import { Input, Radio, Tooltip } from 'ppfish';
 import { modalMap } from '@/constant/phone';
 import useGlobal from '@/hooks/global';
@@ -11,11 +10,11 @@ import '@/style/Select-Other.less';
 const RadioGroup = Radio.Group;
 const enabledThirdPlatform = get(ipccSetting, 'enabledThirdPlatform', false);
 
-const Other: React.FC<any> = ({ phoneNumber, childRef, onInput }: {
+const Other: React.FC<{
   phoneNumber: string,
-  childRef: React.RefObject<any>
-  onInput: Function
-}) => {
+  onInput: Function,
+  [key: string]: any;
+}> = ({ phoneNumber, onInput, ...props }) => {
   const [transferType, setTransferType] = useState(0);
   const [thirdList, setThirdList] = useState<any[]>([]);
   const { global } = useGlobal();
@@ -35,7 +34,7 @@ const Other: React.FC<any> = ({ phoneNumber, childRef, onInput }: {
     }
   }, [])
 
-  return <div className="select-other">
+  return <div className="select-other" {...props}>
     {
       isTransfer && enabledThirdPlatform ? <RadioGroup className="select-other-options" onChange={(event: any) => {
         setTransferType(event.target.value)

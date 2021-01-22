@@ -1,5 +1,9 @@
-export const audioConnectSound = document.querySelector('#call-connected-sound') as HTMLAudioElement;
+interface HTMLAudioElementExtended extends HTMLAudioElement {
+  hangupFrom: number
+}
 
-export const audioHangupSound = document.querySelector('#call-hangup-sound') as HTMLAudioElement;
+export const audioConnectSound = document.querySelector('#call-connected-sound') as HTMLAudioElementExtended;
 
-export const audioRingSound = document.querySelector('#call-ring-sound') as HTMLAudioElement;
+export const audioHangupSound = document.querySelector('#call-hangup-sound') as HTMLAudioElementExtended;
+
+export const audioRingSound = document.querySelector('#call-ring-sound') as HTMLAudioElementExtended;

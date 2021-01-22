@@ -5,7 +5,6 @@ import CallDial from '@/pages/CallDial';
 import CallBusy from '@/pages/CallBusy';
 import CallConference from '@/pages/CallConference';
 import { sipAdaptor } from '@/utils/sip';
-// @ts-ignore
 import { Modal, message } from 'ppfish';
 import IntercomModal from '@/pages/SelectModal';
 import { callStatusMap, PhoneMode, seatStatusMap } from '@/constant/phone';
@@ -18,7 +17,7 @@ import '@/style/CallPanel.less';
 
 const callUser = get(setting, 'callUser', {});
 
-const CallPanel: React.FC<any> = () => {
+const CallPanel: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
   const { global } = useGlobal();
 
@@ -43,7 +42,6 @@ const CallPanel: React.FC<any> = () => {
     iterateObject({
       // 媒体对象检测
       mediaError(options: any) {
-        // @ts-ignore
         window.debug("[mediaError] 浏览器WEBRTC模块出现内部错误 data %O callUser %O", options, setting.callUser);
       },
       // 来电事件

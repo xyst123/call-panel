@@ -13,7 +13,7 @@ import '@/style/CallBusy.less';
 
 const callUser = get(setting, 'callUser', {});
 
-const CallBusy: React.FC<any> = () => {
+const CallBusy: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
   const [extNumber, setExtNumber] = useState('');
   const [showDial, setShowDial] = useState(false);
@@ -76,7 +76,6 @@ const CallBusy: React.FC<any> = () => {
     const isSessionSeat = phone.isBusy && phone.callStatus !== 'conference';
     const isConferenceChairman = phone.callStatus === 'conference';
     if (audioHangupSound && (isSessionSeat || isConferenceChairman)) {
-      // @ts-ignore
       audioHangupSound.hangupFrom = 1;
     }
     if (phone.session.sessionId) {

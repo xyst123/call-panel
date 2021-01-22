@@ -1,6 +1,5 @@
 import axios, { AxiosRequestConfig, Method } from 'axios';
 import qs from 'qs';
-// @ts-ignore
 import { message } from 'ppfish';
 
 export const iterateObject = (
@@ -16,7 +15,7 @@ export const iterateObject = (
 
 export const mapObject = (
   object: { [key: string]: any },
-  handler: (value: any, key: string, object?: { [key: string]: any }) => void
+  handler: (value: any, key: string, object?: { [key: string]: any }) => any
 ) => {
   const keys = Object.keys(object);
   return keys.map((key) => {
@@ -43,11 +42,11 @@ export const get = (object: any, props: string, defaultValue: any) => {
   return realProps.reduce((prevObject, prop) => {
     const curObject =
       prevObject[prop] === undefined ? defaultValue : prevObject[prop];
-    const type=getType(curObject);
-    if (type==='array') {
+    const type = getType(curObject);
+    if (type === 'array') {
       return [...curObject];
     }
-    if (type==='object') {
+    if (type === 'object') {
       return { ...curObject };
     }
     return curObject;
@@ -103,9 +102,7 @@ export const request = async <T>({
         resolve(error);
       });
   });
-  // @ts-ignore
   promise.abort = abort;
-
   return promise;
 };
 
@@ -264,9 +261,8 @@ export const iterateMatchDOM = (DOM: HTMLElement, target: HTMLElement): boolean 
   return iterateMatchDOM(DOM.parentNode as HTMLElement, target);
 };
 
-// @ts-ignore
-export const debug = (info: string, ...options) => {
-  console.log(info)
+export const debug = (info: string, ...options: any[]) => {
+  console.log(info, options)
 }
 
 export const getStackTrace = () => {

@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, useImperativeHandle } from 'react';
-// @ts-ignore
 import { Input } from 'ppfish';
 import { IGroup } from '@/constant/phone';
 import { getTransfers, } from '@/service/phone';
@@ -8,11 +7,12 @@ import { handleRes, get } from '@/utils';
 import useGlobal from '@/hooks/global';
 import '@/style/Select-Group.less';
 
-const Group: React.FC<any> = ({ group, childRef, onSelect }: {
-  group: IGroup
+const Group: React.FC<{
+  group: IGroup | null
   childRef: React.RefObject<any>
-  onSelect: Function
-}) => {
+  onSelect: Function,
+  [key: string]: any;
+}> = ({ group, childRef, onSelect, ...props }) => {
   const [groups, setGroups] = useState<IGroup[]>([]);
   const [keyword, setKeyword] = useState('');
   const [filterGroups, setFilterGroups] = useState<IGroup[]>([]);

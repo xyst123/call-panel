@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, useImperativeHandle } from 'react';
-// @ts-ignore
 import { Input } from 'ppfish';
 import { ISeat, ModalType } from '@/constant/phone';
 import { getSeats, getTransfers } from '@/service/phone';
@@ -8,11 +7,12 @@ import { handleRes, get } from '@/utils';
 import useGlobal from '@/hooks/global';
 import '@/style/Select-Seat.less';
 
-const Seat: React.FC<any> = ({ seat, childRef, onSelect }: {
-  seat: ISeat
+const Seat: React.FC<{
+  seat: ISeat | null
   childRef: React.RefObject<any>
-  onSelect: Function
-}) => {
+  onSelect: Function,
+  [key: string]: any;
+}> = ({ seat, childRef, onSelect, ...props }) => {
   const handlerMap: {
     [P in ModalType]: Function
   } = {

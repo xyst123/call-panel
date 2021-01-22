@@ -28,6 +28,7 @@ export interface IMember {
   state: 0 | 1,
   isChairman: boolean,
   mute: 0 | 1,
+  time: number
 }
 
 export interface IPhoneStatus {
@@ -114,8 +115,13 @@ export const seatStatusMap: {
 };
 export type TSeatStatus = keyof (typeof seatStatusMap);
 
+interface IGroupStatus {
+  value: number,
+  modalStatus?: string,
+  modalIcon?: string,
+}
 export const groupStatusMap: {
-  [key: number]: any;
+  [key: number]: IGroupStatus;
 } = {
   0: {
     value: 0,

@@ -6,7 +6,7 @@ import store from '@/redux/store';
 import { get } from '@/utils';
 import { setting } from '@/constant/outer';
 import { audioRingSound } from '@/constant/element';
-import {handleCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, handleConference, handleTransfer, phoneReset } from '@/hooks/phone';
+import { handleCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, handleConference, handleTransfer, phoneReset } from '@/hooks/phone';
 
 import '@/style/reset.less';
 import '@/style/index.less';
@@ -44,8 +44,8 @@ import '@/style/iconfont.less';
 //     });
 // }
 
-// @ts-ignore
-window.debug = (type: string, ...args) => {
+// TODO window.debug
+window.debug = (type: string) => {
   return () => {
 
   }
@@ -53,20 +53,20 @@ window.debug = (type: string, ...args) => {
 
 audioRingSound.src = get(setting, 'user.call.ringUrl', '');
 
-const {getState,dispatch}=store;
+const { getState, dispatch } = store;
 
-const component= <Provider store={store}>
+const component = <Provider store={store}>
   <Routes />
 </Provider>
 
-export const sendCall=(params?:Common.IObject<any>)=>{
-  handleCallOut(getState().phone,dispatch)(params)
+export const sendCall = (params?: Common.IObject<any>) => {
+  handleCallOut(getState().phone, dispatch)(params)
 }
 
 export default component;
 
-class CallPanel{
-  constructor({root,setting={}}:{root:string,setting?:Common.IObject<any>}){
+export class CallPanel {
+  constructor({ root, setting = {} }: { root: string, setting?: Common.IObject<any> }) {
     ReactDOM.render(
       component,
       document.getElementById(root)
@@ -74,9 +74,9 @@ class CallPanel{
 
     this.setSetting(setting);
 
-    window.addEventListener('message',(event:MessageEvent)=>{
-      const {method, params} = event.data;
-      switch (method){
+    window.addEventListener('message', (event: MessageEvent) => {
+      const { method, params } = event.data;
+      switch (method) {
         case 'setSetting':
           this.setSetting(params)
           break;
@@ -91,27 +91,27 @@ class CallPanel{
     })
   }
 
-  setSetting(setting?:Common.IObject<any>){
-    if(setting){
+  setSetting(setting?: Common.IObject<any>) {
+    if (setting) {
       dispatch({
         type: 'GLOBAL_SET',
-        payload: {setting}
+        payload: { setting }
       })
     }
   }
 
-  setDisplay(display:boolean){
+  setDisplay(display: boolean) {
     dispatch({
       type: 'PHONE_SET',
-      payload: {display}
+      payload: { display }
     })
   }
 
-  sendCall(params?:Common.IObject<any>){
+  sendCall(params?: Common.IObject<any>) {
     sendCall(params)
   }
 }
 
-(window as any).CallPanel=CallPanel;
+window.CallPanel = CallPanel;
 
 

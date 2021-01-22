@@ -7,13 +7,12 @@ import useGlobal from '@/hooks/global';
 import { sessionCheck, muteMember, deleteMember } from '@/service/phone';
 import { get, handleRes, mapObject } from '@/utils';
 import { useDispatch } from 'react-redux';
-// @ts-ignore
 import { Tooltip } from 'ppfish';
 import '@/style/CallConference.less';
 
 const waitingArray = [0, 1, 2];
 
-const CallConference: React.FC<any> = () => {
+const CallConference: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
   const { global } = useGlobal();
 
@@ -26,7 +25,6 @@ const CallConference: React.FC<any> = () => {
     const isSessionSeat = phone.isBusy && phone.callStatus !== 'conference';
     const isConferenceChairman = phone.callStatus === 'conference';
     if (audioHangupSound && (isSessionSeat || isConferenceChairman)) {
-      // @ts-ignore
       audioHangupSound.hangupFrom = 1;
     }
     if (phone.session.sessionId) {
@@ -42,8 +40,7 @@ const CallConference: React.FC<any> = () => {
     }, 1000);
   };
 
-  // @ts-ignore
-  const members: IMember[] = useMemo(() => mapObject(get(phone, 'conference.members', {}), (member) => member).sort((a, b) => a.time - b.time), [phone]);
+  const members: IMember[] = useMemo(() => mapObject(get(phone, 'conference.members', {}), (member) => member).sort((a: IMember, b: IMember) => a.time - b.time), [phone]);
   const { length: memberLength } = members;
 
   const handleAddMember = () => {

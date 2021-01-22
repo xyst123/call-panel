@@ -3,12 +3,6 @@ import { get, getType, getStackTrace, shuffle } from '@/utils';
 import { getSIPList } from '@/service/sip';
 import { setting } from '@/constant/outer';
 
-// TODO window.debug
-// @ts-ignore
-window.debug = (type: string) => {
-  return console.log
-}
-
 interface IServerOptions {
   codeTip: ICodeTip,
   proxy?: object,
@@ -151,7 +145,6 @@ const QiyuConfig = {
 const callUser = get(setting, 'callUser', {});
 const user = get(setting, 'user', {});
 
-// @ts-ignore
 const debugSipServer = window.debug('callcenter:sipserver');
 
 class SIPServer {
@@ -334,7 +327,6 @@ class SIPServer {
 
   private notify(hasError: boolean, options: { codeTip: ICodeTip }) {
     const { codeTip } = options;
-    // @ts-ignore
     window.debug('[init SipServer] %O', {
       error: hasError,
       options: {
@@ -415,7 +407,6 @@ class SIPServer {
         extraHeaders: [`App-ID: ${callUser.appId}`],
         url,
         callback(type: string, data: any = {}) {
-          // @ts-ignore
           window.debug('[notifyQiyu] type:%s, data:%O', type, data);
           const { ua: sdkUA } = sipServer.sdk;
           switch (type) {
@@ -429,7 +420,6 @@ class SIPServer {
               sipAdaptor.status = sipAdaptorStatusMap.initializeFail;
               const isConnected = sdkUA.isConnected();
               const isRegistered = sdkUA.isRegistered();
-              // @ts-ignore
               window.debug('[registrationFailed] %O', {
                 code: data.code,
                 error: data.error,
@@ -469,7 +459,6 @@ class SIPServer {
             case 'disconnected':
               const errorInfo = get(data, 'error', { error: false });
               const { error: hasError } = errorInfo;
-              // @ts-ignore
               window.debug('[disconnected] %O', {
                 error: errorInfo,
                 isConnected: sdkUA.isConnected(),
@@ -549,7 +538,6 @@ class SIPServer {
               const { originator, session } = data;
               if (originator === 'local') return;
               if (sipServer.session) {
-                // @ts-ignore
                 window.debug('[terminate] %O', {
                   status_code: 486,
                   reason_phrase: 'Busy Here',
@@ -579,14 +567,12 @@ class SIPServer {
               });
 
               session.on('ended', () => {
-                // @ts-ignore
                 window.debug('jssip:ended');
                 sipServer.stopStats();
                 sipServer.session = null;
               });
 
               session.on('failed', () => {
-                // @ts-ignore
                 window.debug('jssip:failed');
                 sipServer.stopStats();
                 sipServer.session = null;
@@ -646,10 +632,8 @@ class SIPServer {
 }
 
 // TODO cefQuery
-// @ts-ignore
 window.cefQuery = false;
 
-// @ts-ignore
 const inPC = window.cefQuery;
 
 class SIPAdaptor {
@@ -666,7 +650,6 @@ class SIPAdaptor {
     this.rtcConfig = null;
     this.sipServer = new SIPServer({
       sdkType: 'qiyu',
-      // @ts-ignore
       sdk: window.QiyuConnect,
       sipAdaptor: this
     });
@@ -683,7 +666,6 @@ class SIPAdaptor {
         return;
       }
       // TODO _nativeApi
-      // @ts-ignore
       // window._nativeApi.detectAudioDevice();
     } else {
       try {
@@ -695,7 +677,6 @@ class SIPAdaptor {
             this.sipServer.init();
           })
           .catch((error) => {
-            // @ts-ignore
             window.debug('getUserMediaError %O', error);
             switch (error.name) {
               case 'NotAllowedError':
@@ -794,7 +775,6 @@ class SIPAdaptor {
         }
       }
     }
-    // @ts-ignore
     window.debug('connect %s', getStackTrace());
   };
 
@@ -813,7 +793,6 @@ class SIPAdaptor {
   dispatchEvent(event: string, options: any) {
     const eventCallback = this.eventCallbackMap[event]
     if (getType(eventCallback) === 'function') {
-      // @ts-ignore
       window.debug('dispatchEvent %s %O', event, options);
       eventCallback(options);
     }
@@ -836,7 +815,6 @@ class SIPAdaptor {
       window.navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then((stream) => {
         clearTimeout(timer as NodeJS.Timeout);
 
-        // @ts-ignore
         window.debug('getUserMedia success hasAccept:%d', Number(hasAccept));
 
         if (!hasAccept) {
@@ -847,7 +825,6 @@ class SIPAdaptor {
           hasAccept = true;
         }
       }).catch((error) => {
-        // @ts-ignore
         window.debug('getUserMedia failed %O', error);
         this.dispatchEvent('mediaError', { type: "accept", error, status: this.status, retryCount });
       });

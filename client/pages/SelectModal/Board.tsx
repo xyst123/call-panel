@@ -22,7 +22,7 @@ const Board: React.FC<{
   list: ISeat[] | IGroup[],
   loading: boolean,
   emptyText: string,
-  onSelect: Function
+  onSelect: (item: (ISeat & IGroup)) => void
   [key: string]: any;
 }> = ({ type, selected, list, loading, emptyText, onSelect, ...props }) => {
   if (loading) return <div className="select-board" {...props}><Icon type="load-line" spinning={true} /></div>;

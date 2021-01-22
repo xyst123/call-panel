@@ -74,7 +74,7 @@ export class CallPanel {
 
     this.setSetting(setting);
 
-    window.addEventListener('message', (event: MessageEvent) => {
+    window.addEventListener('message', (event: MessageEvent<any>) => {
       const { method, params } = event.data;
       switch (method) {
         case 'setSetting':

@@ -220,7 +220,7 @@ export const getRandom = (from: number, to: number): number => {
 };
 
 export const delay = async <T>(
-  callback: Function,
+  callback: () => any,
   time: number
 ): Promise<T> => {
   await new Promise((resolve) => {

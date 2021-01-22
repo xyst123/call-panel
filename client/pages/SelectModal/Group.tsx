@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, useImperativeHandle } from 'react';
 import { Input } from 'ppfish';
-import { IGroup } from '@/constant/phone';
+import { IGroup, IModalCallbacks } from '@/constant/phone';
 import { getTransfers, } from '@/service/phone';
 import Board from '@/pages/SelectModal/Board';
 import { handleRes, get } from '@/utils';
@@ -9,8 +9,8 @@ import '@/style/Select-Group.less';
 
 const Group: React.FC<{
   group: IGroup | null
-  childRef: React.RefObject<any>
-  onSelect: Function,
+  childRef: React.Ref<IModalCallbacks>
+  onSelect: (group: IGroup) => void,
   [key: string]: any;
 }> = ({ group, childRef, onSelect, ...props }) => {
   const [groups, setGroups] = useState<IGroup[]>([]);
@@ -64,7 +64,7 @@ const Group: React.FC<{
 
   return <>
     <div className="select-group">
-      <Input value={keyword} placeholder="搜索客服组名称" size="large" onChange={(event: any) => {
+      <Input value={keyword} placeholder="搜索客服组名称" size="large" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
         const string = event.target.value;
         setKeyword(string);
       }} />

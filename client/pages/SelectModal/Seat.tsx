@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, useImperativeHandle } from 'react';
 import { Input } from 'ppfish';
-import { ISeat, ModalType } from '@/constant/phone';
+import { ISeat, ModalType, IModalCallbacks } from '@/constant/phone';
 import { getSeats, getTransfers } from '@/service/phone';
 import Board from '@/pages/SelectModal/Board';
 import { handleRes, get } from '@/utils';
@@ -9,12 +9,12 @@ import '@/style/Select-Seat.less';
 
 const Seat: React.FC<{
   seat: ISeat | null
-  childRef: React.RefObject<any>
-  onSelect: Function,
+  childRef: React.Ref<IModalCallbacks>
+  onSelect: (seat: ISeat) => void,
   [key: string]: any;
 }> = ({ seat, childRef, onSelect, ...props }) => {
   const handlerMap: {
-    [P in ModalType]: Function
+    [P in ModalType]: () => Promise<Common.IRes>
   } = {
     intercom: getSeats,
     conference: getSeats,
@@ -72,7 +72,7 @@ const Seat: React.FC<{
 
   return <>
     <div className="select-seat">
-      <Input value={keyword} placeholder="搜索坐席姓名" size="large" onChange={(event: any) => {
+      <Input value={keyword} placeholder="搜索坐席姓名" size="large" onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
         const string = event.target.value;
         setKeyword(string);
       }} />

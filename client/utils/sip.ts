@@ -642,7 +642,7 @@ class SIPAdaptor {
   rtcConfig: IRTCConfig | null;
   sipServer: SIPServer;
 
-  private eventCallbackMap: Common.IObject<Function>;
+  private eventCallbackMap: Common.IObject<(options: any) => void>;
 
   constructor() {
     this.status = sipAdaptorStatusMap.initializing;
@@ -786,7 +786,7 @@ class SIPAdaptor {
     window.debug('disConnect %s', getStackTrace());
   }
 
-  addEventListener(event: string, callback: Function, scope: object = {}) {
+  addEventListener(event: string, callback: (options: any) => void, scope: object = {}) {
     this.eventCallbackMap[event] = callback.bind(scope)
   };
 

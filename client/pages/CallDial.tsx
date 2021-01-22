@@ -23,7 +23,7 @@ const CallDial: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
   const [disableUnsigned, setDisableUnsigned] = useState(false); // 需要签署安全协议的企业（未付费使用企业）是否禁用掉外呼功能
   const [callTaskData, setCallTaskData] = useState<null | object>(null);
-  const input = useRef<HTMLInputElement>(null);
+  const input = useRef<HTMLInputElement>(null!);
   const dispatch = useDispatch();
 
   const handleSetDialNumber = (value: string) => {
@@ -33,7 +33,7 @@ const CallDial: React.FC<Common.IObject<any>> = () => {
         dialingNumber: value
       }
     });
-    input.current?.focus();
+    input.current.focus();
   }
 
   const handleGetSetting = async () => {

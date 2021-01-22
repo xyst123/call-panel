@@ -9,7 +9,7 @@ interface Window {
 declare let debug: Window["debug"];
 
 interface Promise {
-  abort: Function | null,
+  abort: (() => void) | null,
 }
 
 declare namespace Common {
@@ -33,6 +33,7 @@ declare namespace Store {
     type: string;
     payload: any;
   }
+  type dispatch = (action: IAction) => void
 }
 
 interface RefObject<T> {

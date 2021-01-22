@@ -3,11 +3,10 @@ import { iterateMatchDOM } from '@/utils';
 import '@/style/Select.less';
 
 export const SelectOption: React.FC<{
-  children: any[],
   value: any,
   label: string,
   width?: number,
-  onOptionClick?: Function,
+  onOptionClick?: () => void,
   className?: string,
   subOptions?: any[],
   [key: string]: any;
@@ -42,11 +41,11 @@ export const SelectOption: React.FC<{
 };
 
 export const Select: React.FC<{
-  children: any[],
+  children: JSX.Element[],
   defaultValue?: any,
   disabled?: boolean,
   overflowY?: 'visible' | 'scroll',
-  onChange?: Function,
+  onChange?: (value: any) => void,
   className?: string,
   [key: string]: any;
 }> = ({ defaultValue, disabled = false, overflowY = 'scroll', onChange = Function.prototype, children, className, ...props }) => {
@@ -54,16 +53,16 @@ export const Select: React.FC<{
     value: null, label: ''
   });
   const [showOptions, setShowOptions] = useState(false);
-  const selectRef = useRef<HTMLDivElement>(null);
-  const handleHideOptions = useRef((event: Event) => {
-    const match = iterateMatchDOM(event.target as HTMLElement, selectRef.current as HTMLDivElement);
+  const selectRef = useRef<HTMLDivElement>(null!);
+  const handleHideOptions = useRef((event: MouseEvent) => {
+    const match = iterateMatchDOM(event.target as HTMLElement, selectRef.current);
     if (!match) {
       setShowOptions(false)
     }
   })
 
   useEffect(() => {
-    const [defaultChild] = children.filter((child: any) => child.props.value === defaultValue);
+    const [defaultChild] = children.filter((child) => child.props.value === defaultValue);
     if (defaultChild) {
       const { value, label } = defaultChild.props;
       setValueLabel({
@@ -92,7 +91,7 @@ export const Select: React.FC<{
         <i className="iconfont icon-triangle-down"></i>
       </div>
       <ul className={`select-options select-options_${showOptions ? 'show' : 'hide'}`} style={{ overflowY, maxHeight: overflowY === 'scroll' ? '300px' : 'auto' }}>
-        {children.map((child: any) => {
+        {children.map((child) => {
           return React.cloneElement(child, {
             onOptionClick(result: Common.IValueLabel) {
               if (result.value !== valueLabel.value) {

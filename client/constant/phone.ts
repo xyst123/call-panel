@@ -22,6 +22,8 @@ export enum SDKStatus {
   connectingNotReady,
 }
 
+export interface IModalCallbacks { reset(): void, reload(): void }
+
 export interface IMember {
   member: string,
   memberName: string,

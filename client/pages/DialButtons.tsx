@@ -5,7 +5,7 @@ import '@/style/DialButtons.less';
 const buttons = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'];
 
 const DialButtons: React.FC<{
-  handler: Function,
+  handler: (button: string) => void,
   className?: string,
   [key: string]: any;
 }> = ({ handler, className, ...props }) => {

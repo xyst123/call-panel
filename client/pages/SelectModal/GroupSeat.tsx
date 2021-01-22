@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, useImperativeHandle } from 'react';
 import { Select } from 'ppfish';
-import { ISeat, IGroup } from '@/constant/phone';
+import { ISeat, IGroup, IModalCallbacks } from '@/constant/phone';
 import { getSeats, } from '@/service/phone';
 import Board from '@/pages/SelectModal/Board';
 import useGlobal from '@/hooks/global';
@@ -11,8 +11,8 @@ const allGroupsText = '所有客服组';
 
 const Group: React.FC<{
   seat: ISeat | null
-  childRef: React.RefObject<any>
-  onSelect: Function,
+  childRef: React.Ref<IModalCallbacks>
+  onSelect: (seat: ISeat) => void,
   [key: string]: any;
 }> = ({ seat, childRef, onSelect, ...props }) => {
   const [seats, setSeats] = useState<ISeat[]>([]);

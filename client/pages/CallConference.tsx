@@ -5,12 +5,13 @@ import { IMember } from '@/constant/phone';
 import usePhone, { phoneReset, handleConference } from '@/hooks/phone';
 import useGlobal from '@/hooks/global';
 import { sessionCheck, muteMember, deleteMember } from '@/service/phone';
-import { get, handleRes, mapObject } from '@/utils';
+import { get, handleRes, mapObject, getDebug } from '@/utils';
 import { useDispatch } from 'react-redux';
 import { Tooltip } from 'ppfish';
 import '@/style/CallConference.less';
 
 const waitingArray = [0, 1, 2];
+const callPanelDebug = getDebug('callpanel');
 
 const CallConference: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
@@ -19,7 +20,7 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
   const dispatch = useDispatch();
 
   const handleBye = () => {
-    window.debug('[colBye]');
+    callPanelDebug('[colBye]');
     sipAdaptor.callSDK('bye');
 
     const isSessionSeat = phone.isBusy && phone.callStatus !== 'conference';
@@ -53,7 +54,7 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
   const handleMuteMember = async (member: IMember) => {
     const type = member.mute ? 'unmute' : 'mute'
 
-    debug(`[${type}member] data:%O`, member);
+    callPanelDebug(`[${type}member] data:%O`, member);
 
     const res = await muteMember(type, {
       member: member.member,

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SessionMode, PhoneMode, callStatusMap } from '@/constant/phone';
 import DialButtons from '@/pages/DialButtons';
-import { get, hidePhoneNumber } from '@/utils';
+import { get, hidePhoneNumber, getDebug } from '@/utils';
 import { sipAdaptor } from '@/utils/sip';
 import usePhone, { handleCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, handleConference, handleTransfer, phoneReset } from '@/hooks/phone';
 import { setting, corpPermission } from '@/constant/outer';
@@ -12,6 +12,7 @@ import { useDispatch } from 'react-redux';
 import '@/style/CallBusy.less';
 
 const callUser = get(setting, 'callUser', {});
+const callPanelDebug = getDebug('callpanel');
 
 const CallBusy: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
@@ -70,7 +71,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
   }
 
   const handleBye = () => {
-    window.debug('[colBye]');
+    callPanelDebug('[colBye]');
     sipAdaptor.callSDK('bye');
 
     const isSessionSeat = phone.isBusy && phone.callStatus !== 'conference';
@@ -100,7 +101,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         color: 'green',
         text: '恢复通话',
         handler() {
-          debug('[sendResume]');
+          callPanelDebug('[sendResume]');
           if (phone.sessionMode === SessionMode.intercom) {
             intercomUnmute(phone.intercom.intercomId);
           } else {
@@ -122,7 +123,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         color: 'yellow',
         text: '取消静音',
         handler() {
-          debug('[sendUnmute]');
+          callPanelDebug('[sendUnmute]');
           sipAdaptor.callSDK('unmute');
           dispatch({
             type: 'PHONE_SET',
@@ -140,7 +141,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         icon: 'mute',
         text: '静音',
         handler() {
-          debug('[sendMute]');
+          callPanelDebug('[sendMute]');
           sipAdaptor.callSDK('mute');
           dispatch({
             type: 'PHONE_SET',
@@ -156,7 +157,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         icon: 'pause',
         text: '暂停',
         handler() {
-          debug('[sendPause]');
+          callPanelDebug('[sendPause]');
           if (phone.sessionMode === SessionMode.intercom) {
             intercomMute(phone.intercom.intercomId);
           } else {
@@ -239,7 +240,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         color: 'green',
         text: '接起',
         handler(options: Common.IObject<any>, autoAnswer: boolean) {
-          debug('[colAccept] %O autoanswer %O', options, autoAnswer);
+          callPanelDebug('[colAccept] %O autoanswer %O', options, autoAnswer);
           if (!autoAnswer) {
             clearTimeout(phone.autoAnswerTimer);
           }
@@ -279,7 +280,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         color: 'green',
         text: '加入',
         handler(mode?: number) {
-          debug('[colJoin]');
+          callPanelDebug('[colJoin]');
           dispatch({
             type: 'PHONE_SET',
             payload: {
@@ -308,7 +309,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         color: 'green',
         text: '完成处理',
         async handler() {
-          debug("[overprocess] callUser %O", callUser);
+          callPanelDebug("[overprocess] callUser %O", callUser);
           startSetStatus(phone, dispatch)({
             value: [callUser.settedStatus, callUser.settedStatusExt],
             type: 'over-process',

@@ -45,7 +45,7 @@ import '@/style/iconfont.less';
 // }
 
 // TODO window.debug
-window.debug = (type: string) => {
+window.debug = (type: string) => () => {
   return () => {
 
   }

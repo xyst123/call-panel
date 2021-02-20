@@ -4,11 +4,12 @@ import CallHeader from '@/pages/CallHeader';
 import CallDial from '@/pages/CallDial';
 import CallBusy from '@/pages/CallBusy';
 import CallConference from '@/pages/CallConference';
+import eventBus from '@/utils/eventBus';
 import { sipAdaptor } from '@/utils/sip';
 import { Modal, message } from 'ppfish';
 import IntercomModal from '@/pages/SelectModal';
 import { callStatusMap, PhoneMode, seatStatusMap } from '@/constant/phone';
-import { get, iterateObject } from '@/utils';
+import { get, iterateObject, getDebug } from '@/utils';
 import { setting } from '@/constant/outer';
 import { audioRingSound } from '@/constant/element';
 import usePhone, { handleCallOut } from '@/hooks/phone';
@@ -16,6 +17,7 @@ import useGlobal from '@/hooks/global';
 import '@/style/CallPanel.less';
 
 const callUser = get(setting, 'callUser', {});
+const callPanelDebug = getDebug('callpanel');
 
 const CallPanel: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
@@ -26,7 +28,7 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
   // 配置 ws 消息回调
   const wsCallbackConfig = {
     cbRinging() {
-      window.debug('[ringing] callUser %O', callUser);
+      callPanelDebug('[ringing] callUser %O', callUser);
       dispatch({
         type: 'PHONE_SET',
         payload: {
@@ -39,10 +41,11 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
   }
 
   useEffect(() => {
+    // 注册sipAdaptor事件回调
     iterateObject({
       // 媒体对象检测
       mediaError(options: any) {
-        window.debug("[mediaError] 浏览器WEBRTC模块出现内部错误 data %O callUser %O", options, setting.callUser);
+        callPanelDebug("[mediaError] 浏览器WEBRTC模块出现内部错误 data %O callUser %O", options, setting.callUser);
       },
       // 来电事件
       ringing(options: any) {
@@ -118,6 +121,86 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
       }
     }, (handler, event) => {
       sipAdaptor.addEventListener(event, handler)
+    })
+
+    iterateObject({
+      // 能否发消息
+      '-1000': {
+        handler() {
+          // 客服端收到客户端握手指令
+          // TODO
+        }
+      },
+      foreignLoad() {
+
+      },
+      // 外呼任务
+      callTask() {
+
+      },
+      // 会话加载完成
+      detailLoad() {
+
+      },
+      // 对方接听
+      accepted() {
+
+      },
+      // 云信通知会话开始，用于显示电话号码
+      sessionBegin() {
+
+      },
+      sessionClose() {
+
+      },
+      // 呼入通话自动接起
+      autoAnswerSwitch() {
+
+      },
+      // 电话音频内容推送（电话开始到电话结束）
+      sessionAudioAnswer() {
+
+      },
+      // 云信通知内部会话开始，用于显示电话号码
+      intercomBegin() {
+
+      },
+      intercomClose() {
+
+      },
+      // 内部通话对方接听
+      intercomAccepted() { },
+      // 180-199留给电话会议使用
+      // 通知电话会议开始
+      '180': {
+        handle(options: Common.IObject<any>) {
+          callPanelDebug('onconferencebegin  %O', options);
+          // TODO this.data.state = 'conference';
+          dispatch({
+            type: 'PHONE_SET',
+            payload: {
+              callStatus: 'joinIn',
+              conference: {
+                sessionId: options.sessionId,
+                conferenceId: options.conferenceId,
+              }
+            }
+          })
+        }
+      },
+      '181': {
+        handle(options: Common.IObject<any>) {
+
+        }
+      },
+      // 会议邀请
+      conferenceJoin() { },
+      conferenceJoined() { },
+      conferenceLeft() { },
+      conferenceMuted() { },
+      conferenceUnmuted() { },
+    }, (handler, event) => {
+      eventBus.addEventListener(event, handler)
     })
 
     // 软电话模式下，初始化sip账号

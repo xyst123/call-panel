@@ -1,12 +1,12 @@
 import { useSelector } from 'react-redux';
 import { IPhoneStatus, IExtendedPhoneStatus, SessionMode, callStatusMap, seatStatusMap, TSeatStatus, restStatusMap, TRestStatus, PhoneMode, memberInitial } from '@/constant/phone';
 import { setting, ipccSetting } from '@/constant/outer';
-import { debug, handleRes, get } from '@/utils';
+import { handleRes, get, getDebug } from '@/utils';
 import { sipAdaptor } from '@/utils/sip';
 import { callOut, intercomCallOut, setStatus, joinConference, transfer } from '@/service/phone';
 import { message } from 'ppfish';
 
-
+const callPanelDebug = getDebug('callpanel');
 
 const getStatusText = (key: TSeatStatus, subKey: TRestStatus) => {
   if (key === 2 && subKey) {
@@ -67,7 +67,7 @@ export const handleCallOut = (phone: IExtendedPhoneStatus, dispatch: Store.dispa
 
   if (!phone.outCallRandom && !outCallNumber) return message.error('请选择外呼号码');
 
-  debug(`[sendCallOut] number: ${phone.outCallNumber}`);
+  callPanelDebug(`[sendCallOut] number: ${phone.outCallNumber}`);
 
   dispatch({
     type: 'PHONE_SET',
@@ -105,7 +105,7 @@ export const handleIntercomCallOut = (phone: IExtendedPhoneStatus, dispatch: Sto
     }
   })
 
-  window.debug('[sendIntercomCallout]  staffId:%s', remoteStaffId);
+  callPanelDebug('[sendIntercomCallout]  staffId:%s', remoteStaffId);
 
   dispatch({
     type: 'PHONE_SET',
@@ -192,7 +192,7 @@ const handleSetStatus = (phone: IExtendedPhoneStatus, dispatch: Store.dispatch) 
   // TODO changecallstatus
   // me.$emit('changecallstatus');
 
-  debug('[sendStatus]  status:%s', getStatusText(seatStatus, restStatus));
+  callPanelDebug('[sendStatus]  status:%s', getStatusText(seatStatus, restStatus));
 
   const res = await setStatus(type, data);
   handleRes(res, () => {
@@ -318,7 +318,7 @@ export const startSetStatus = (phone: IExtendedPhoneStatus, dispatch: Store.disp
     if (options.value || status) {
       options.value = 0;
     }
-    debug(`[sendStatus] ${seatStatusMap[status].kickedText || '账号被踢'}`);
+    callPanelDebug(`[sendStatus] ${seatStatusMap[status].kickedText || '账号被踢'}`);
   }
 
   const { mockManualSwitch, confirmCallback, value, type } = options;
@@ -326,7 +326,7 @@ export const startSetStatus = (phone: IExtendedPhoneStatus, dispatch: Store.disp
   const autoSwitch = mockManualSwitch ? !mockManualSwitch : !confirmCallback;
   const [seatStatus, restStatus] = Array.isArray(value) ? value : [value, ''];
 
-  debug(
+  callPanelDebug(
     '[changeStatus]  status:%s mode:%d',
     getStatusText(seatStatus, restStatus),
     phone.mode
@@ -375,7 +375,7 @@ export const startSetStatus = (phone: IExtendedPhoneStatus, dispatch: Store.disp
 }
 
 export const handleConference = (phone: IExtendedPhoneStatus, dispatch: Store.dispatch) => async (type: string, data: Common.IObject<any> = {}) => {
-  debug(`[${type}] data:%O`, data);
+  callPanelDebug(`[${type}] data:%O`, data);
   const { name: memberName } = data;
   delete data.name;
 
@@ -433,7 +433,7 @@ export const handleConference = (phone: IExtendedPhoneStatus, dispatch: Store.di
 }
 
 export const handleTransfer = (phone: IExtendedPhoneStatus, dispatch: Store.dispatch) => async (data: Common.IObject<any> = {}) => {
-  debug('[sendTransfer] data:%O', data);
+  callPanelDebug('[sendTransfer] data:%O', data);
   delete data.name;
 
   const res = await transfer({

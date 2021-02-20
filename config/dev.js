@@ -8,7 +8,7 @@ module.exports = {
     plugins: [new FriendlyErrorsPlugin()],
   },
   server: {
-    protocol: 'https',
+    protocol: 'http',
     port: 3007,
     enableStaticCache: false,
     enableMock: false,

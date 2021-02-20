@@ -261,9 +261,7 @@ export const iterateMatchDOM = (DOM: HTMLElement, target: HTMLElement): boolean 
   return iterateMatchDOM(DOM.parentNode as HTMLElement, target);
 };
 
-export const debug = (info: string, ...options: any[]) => {
-  console.log(info, options)
-}
+export const getDebug = (type: string): Function => window.debug ? window.debug(`callcenter:${type}`) : Function.prototype;
 
 export const getStackTrace = () => {
   const object: any = {};
@@ -315,3 +313,4 @@ export const resetState = (data: Object, state: any, initialState: any) => {
   })
   return copyState;
 }
+

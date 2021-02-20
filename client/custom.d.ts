@@ -6,7 +6,6 @@ interface Window {
   cefQuery: boolean,
   QiyuConnect: any
 }
-declare let debug: Window["debug"];
 
 interface Promise {
   abort: (() => void) | null,

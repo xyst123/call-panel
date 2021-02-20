@@ -1,7 +1,10 @@
 import { seatStatusMap, TSeatStatus } from '@/constant/phone';
-import { get, getType, getStackTrace, shuffle } from '@/utils';
+import { get, getType, getStackTrace, shuffle, getDebug } from '@/utils';
 import { getSIPList } from '@/service/sip';
 import { setting } from '@/constant/outer';
+
+const sipDebug = getDebug('sipserver');
+const adaptorDebug = getDebug('sipserver');
 
 interface IServerOptions {
   codeTip: ICodeTip,
@@ -144,8 +147,6 @@ const QiyuConfig = {
 
 const callUser = get(setting, 'callUser', {});
 const user = get(setting, 'user', {});
-
-const debugSipServer = window.debug('callcenter:sipserver');
 
 class SIPServer {
   status: ICodeTip; // 0-准备中 1-lbs获取错误 2-lbs首次加载3次重试错误 3-lbs取空后获取错误 4-本地取空
@@ -322,12 +323,12 @@ class SIPServer {
 
   log(message: string, data?: any) {
     message = `${new Date().toLocaleTimeString()} ${message}`;
-    debugSipServer(message, data)
+    sipDebug(message, data)
   }
 
   private notify(hasError: boolean, options: { codeTip: ICodeTip }) {
     const { codeTip } = options;
-    window.debug('[init SipServer] %O', {
+    adaptorDebug('[init SipServer] %O', {
       error: hasError,
       options: {
         code: codeTip.code,
@@ -407,7 +408,7 @@ class SIPServer {
         extraHeaders: [`App-ID: ${callUser.appId}`],
         url,
         callback(type: string, data: any = {}) {
-          window.debug('[notifyQiyu] type:%s, data:%O', type, data);
+          adaptorDebug('[notifyQiyu] type:%s, data:%O', type, data);
           const { ua: sdkUA } = sipServer.sdk;
           switch (type) {
             case 'registered':
@@ -420,7 +421,7 @@ class SIPServer {
               sipAdaptor.status = sipAdaptorStatusMap.initializeFail;
               const isConnected = sdkUA.isConnected();
               const isRegistered = sdkUA.isRegistered();
-              window.debug('[registrationFailed] %O', {
+              adaptorDebug('[registrationFailed] %O', {
                 code: data.code,
                 error: data.error,
                 reason: data.cause,
@@ -459,7 +460,7 @@ class SIPServer {
             case 'disconnected':
               const errorInfo = get(data, 'error', { error: false });
               const { error: hasError } = errorInfo;
-              window.debug('[disconnected] %O', {
+              adaptorDebug('[disconnected] %O', {
                 error: errorInfo,
                 isConnected: sdkUA.isConnected(),
                 status: sdkUA.status,
@@ -538,7 +539,7 @@ class SIPServer {
               const { originator, session } = data;
               if (originator === 'local') return;
               if (sipServer.session) {
-                window.debug('[terminate] %O', {
+                adaptorDebug('[terminate] %O', {
                   status_code: 486,
                   reason_phrase: 'Busy Here',
                   session: sipServer.session
@@ -567,13 +568,13 @@ class SIPServer {
               });
 
               session.on('ended', () => {
-                window.debug('jssip:ended');
+                adaptorDebug('jssip:ended');
                 sipServer.stopStats();
                 sipServer.session = null;
               });
 
               session.on('failed', () => {
-                window.debug('jssip:failed');
+                adaptorDebug('jssip:failed');
                 sipServer.stopStats();
                 sipServer.session = null;
               });
@@ -677,12 +678,13 @@ class SIPAdaptor {
             this.sipServer.init();
           })
           .catch((error) => {
-            window.debug('getUserMediaError %O', error);
+            adaptorDebug('getUserMediaError %O', error);
             switch (error.name) {
               case 'NotAllowedError':
                 this.status = sipAdaptorStatusMap.microphoneDisabled;
                 break;
-              case 'NotFoundError' || 'DevicesNotFoundError':
+              case 'DevicesNotFoundError':
+              case 'NotFoundError':
                 this.status = sipAdaptorStatusMap.microphoneNotFount;
                 break;
               case 'NotSupportedError':
@@ -697,7 +699,7 @@ class SIPAdaptor {
             });
           });
       } catch (error) {
-        console.log(error);
+        console.error(error);
         if (!window.location.protocol.startsWith('https:')) {
           this.status = sipAdaptorStatusMap.unsafe;
         }
@@ -725,7 +727,7 @@ class SIPAdaptor {
       'wxyjxxkjyxgs', 'wd0090'
     ];
 
-    window.debug('accept corpCode:%s', user.corpCode);
+    adaptorDebug('accept corpCode:%s', user.corpCode);
 
     const answerOptions: IAnswerOptions = {
       mediaConstraints: {
@@ -775,7 +777,7 @@ class SIPAdaptor {
         }
       }
     }
-    window.debug('connect %s', getStackTrace());
+    adaptorDebug('connect %s', getStackTrace());
   };
 
   disConnect() {
@@ -783,7 +785,7 @@ class SIPAdaptor {
     sdk.ua && sdk.ua.stop();
     this.sipServer.isWorking = false;
     this.forceStop = true;
-    window.debug('disConnect %s', getStackTrace());
+    adaptorDebug('disConnect %s', getStackTrace());
   }
 
   addEventListener(event: string, callback: (options: any) => void, scope: object = {}) {
@@ -793,7 +795,7 @@ class SIPAdaptor {
   dispatchEvent(event: string, options: any) {
     const eventCallback = this.eventCallbackMap[event]
     if (getType(eventCallback) === 'function') {
-      window.debug('dispatchEvent %s %O', event, options);
+      adaptorDebug('dispatchEvent %s %O', event, options);
       eventCallback(options);
     }
   }
@@ -802,7 +804,7 @@ class SIPAdaptor {
     retryCount += 1;
     let timer: NodeJS.Timeout | null = null;
 
-    window.debug('retry retryCount:%d', retryCount);
+    adaptorDebug('retry retryCount:%d', retryCount);
 
     //重试次数小于3次时，起一个定时器，如果navigator.mediaDevices.getUserMedia没有返回，定时器触发重试
     if (retryCount < 3) {
@@ -815,7 +817,7 @@ class SIPAdaptor {
       window.navigator.mediaDevices.getUserMedia({ audio: true, video: false }).then((stream) => {
         clearTimeout(timer as NodeJS.Timeout);
 
-        window.debug('getUserMedia success hasAccept:%d', Number(hasAccept));
+        adaptorDebug('getUserMedia success hasAccept:%d', Number(hasAccept));
 
         if (!hasAccept) {
           //防止多次调用：如果navigator.mediaDevices.getUserMedia返回就是很慢，三次重试过了，然后同时返回成功，此时防止接起多次
@@ -825,7 +827,7 @@ class SIPAdaptor {
           hasAccept = true;
         }
       }).catch((error) => {
-        window.debug('getUserMedia failed %O', error);
+        adaptorDebug('getUserMedia failed %O', error);
         this.dispatchEvent('mediaError', { type: "accept", error, status: this.status, retryCount });
       });
     } catch (error) {

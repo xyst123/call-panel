@@ -219,17 +219,14 @@ export const getRandom = (from: number, to: number): number => {
   return parseInt(String(from + (to - from) * Math.random()), 10);
 };
 
-export const delay = async <T>(
-  callback: () => any,
+export const delay = async (
   time: number
-): Promise<T> => {
-  await new Promise((resolve) => {
+): Promise<null> =>
+  new Promise((resolve) => {
     setTimeout(() => {
       resolve(null);
     }, time);
   });
-  return callback();
-};
 
 const windowWidth =
   document.compatMode === 'CSS1Compat'
@@ -313,4 +310,7 @@ export const resetState = (data: Object, state: any, initialState: any) => {
   })
   return copyState;
 }
+
+export const limitLength = (string: string, limit: number) => string.length > limit ? `${string.slice(0, limit - 1)}...` : string;
+
 

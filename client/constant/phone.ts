@@ -22,43 +22,89 @@ export enum SDKStatus {
   connectingNotReady,
 }
 
+export enum PhoneStatus {
+  offline,
+  webOnline,
+  rest,
+  calling,
+  mobile,
+  sipOnline,
+  hangup,
+  process,
+  autoOutCall
+}
+
+export enum CallDirection {
+  in = 1,
+  out = 2
+}
+
+export enum ToggleTrigger {
+  sdk = 'SDK',
+  page = 'PAGE'
+}
+
+export enum SessionType {
+  empty,
+  callIn, // 呼入
+  callOut, // 呼出
+  listener, // 监听
+  transfer, // 转接
+  forecast, // 预测式外呼
+  conference, // 会议邀请
+  intercomOut, // 内部呼出
+  intercomIn, // 内部接听
+}
+
+export enum SessionStatus {
+  empty,
+  ring,
+  begin,
+  accept,
+  bye,
+  close
+}
+
 export interface IModalCallbacks { reset(): void, reload(): void }
 
 export interface IMember {
-  member: string,
-  memberName: string,
+  id: string,
+  name: string,
   state: 0 | 1,
   isChairman: boolean,
+  conferenceId: string,
   mute: 0 | 1,
   time: number
 }
 
-export interface IPhoneStatus {
+export interface IPhone {
   display: boolean,
+  toggleTipDisplay: boolean, // 展示【点击可展开通话面板】
   mode: PhoneMode,
-  statusCached: number, // 缓存坐席状态
-  status: number, // 坐席状态
-  statusExt: number, // 坐席状态
+  statusCached: PhoneStatus, // 缓存坐席状态
+  status: PhoneStatus, // 坐席状态
+  statusExt: TRestStatus, // 坐席状态细分
   statusSelectDisabled: boolean,
+  statusOptions: PhoneStatus[],  // 坐席状态选择列表
+  restStatusOptions: TRestStatus[], // 坐席状态细分列表
   isAutoAnswerFirstTips: boolean,
   outCallRandom: boolean,  // 是否随机号码
   outCallNumbers: string[], // 本机号码备选列表
   outCallNumber: string // 本机号码
   restStatusSwitch: 0 | 1 // 是否开启小休细分
   sessionMode: SessionMode,
-  callStatus: keyof CallStatusMap,
+  callStatus: TCallStatus,
   jitterBuffer: number, // 网络延时
   isCaller: boolean,
   inNextAnswer: false,  // 是否顺振
   inNextAnswerCounter: number,  // 顺振倒计时
-  autoAnswerTimer: number,
-  nextAnswerTimer: number,
   kickedOut: boolean, // 是否被踢出
   tip: string,
   callTaskData: any,
   dialingNumber: string,  // 拨打的号码
   speakingNumber?: string,  // 用户号码
   speakingNumberExt?: string, // 带分机号的用户号码
+  showDial: boolean, // 是否展示外部通话拨号盘
   // 内部通话相关
   intercom: {
     intercomId: number,  // 内部通话会话 id
@@ -74,11 +120,11 @@ export interface IPhoneStatus {
     tip: string, // 信息标识
     conferenceId: string,
     members: Common.IObject<IMember>,
+    state: number
   },
   // 外部通话-会话相关
   session: {
     sessionId: number,  // 非内部通话会话 id
-    hideCustomerNumber?: boolean,  // 是否隐藏用户号码
     mobileArea?: string,  // 地域标识
     username?: string, // 用户名
     vipLevel?: number, // 用户等级
@@ -86,7 +132,7 @@ export interface IPhoneStatus {
   }
 }
 
-export interface IExtendedPhoneStatus extends IPhoneStatus {
+export interface IExtendedPhone extends IPhone {
   isBusy: boolean,
   isRinging: boolean,
   canCallOut: boolean,
@@ -105,17 +151,16 @@ interface IStatus {
 export const seatStatusMap: {
   [key: number]: IStatus;
 } = {
-  0: { text: '离线', value: 0, icon: 'kfzt-lxx', color: '#b6b6b6', modalStatus: 'disabled' },
-  1: { text: '在线', value: 1, icon: 'kfzt-zxx', color: '#53c251', modalIcon: 'kfOnline' },  // web在线
-  2: { text: '小休', value: 2, icon: 'kfzt-xxx', color: '#f8a755', modalIcon: 'kfRest', modalStatus: 'busy' },
-  3: { text: '通话中', value: 3, icon: 'kfzt-thzx', color: '#53c251', kickedText: '通话中被踢', modalIcon: 'kfBusy', modalStatus: 'busy' },
-  4: { text: '手机在线', value: 4, icon: 'phonex', color: '#53c251', modalIcon: 'mobile', modalStatus: 'disabled' },
-  5: { text: '在线', value: 5, icon: 'kfzt-zxx', color: '#53c251', modalIcon: 'kfOnline' }, // SIP话机在线
-  6: { text: '挂起', value: 6, icon: 'kfzt-gqx', color: '#b6b6b6', modalIcon: 'kfHangup', modalStatus: 'busy' },
-  7: { text: '处理中', value: 7, icon: 'kfzt-jxzx', color: '#53c251', kickedText: '处理中被踢', modalIcon: 'kfBusy', modalStatus: 'busy' },
-  8: { text: '自动外呼', value: 8, icon: 'kfzt-zdwhx', color: '#53c251', modalIcon: 'kfForecast', modalStatus: 'busy' },
+  [PhoneStatus.offline]: { text: '离线', value: PhoneStatus.offline, icon: 'kfzt-lxx', color: '#b6b6b6', modalStatus: 'disabled' },
+  [PhoneStatus.webOnline]: { text: '在线', value: PhoneStatus.webOnline, icon: 'kfzt-zxx', color: '#53c251', modalIcon: 'kfOnline' },  // web在线
+  [PhoneStatus.rest]: { text: '小休', value: PhoneStatus.rest, icon: 'kfzt-xxx', color: '#f8a755', modalIcon: 'kfRest', modalStatus: 'busy' },
+  [PhoneStatus.calling]: { text: '通话中', value: PhoneStatus.calling, icon: 'kfzt-thzx', color: '#53c251', kickedText: '通话中被踢', modalIcon: 'kfBusy', modalStatus: 'busy' },
+  [PhoneStatus.mobile]: { text: '手机在线', value: PhoneStatus.mobile, icon: 'phonex', color: '#53c251', modalIcon: 'mobile', modalStatus: 'disabled' },
+  [PhoneStatus.sipOnline]: { text: '在线', value: PhoneStatus.sipOnline, icon: 'kfzt-zxx', color: '#53c251', modalIcon: 'kfOnline' }, // SIP话机在线
+  [PhoneStatus.hangup]: { text: '挂起', value: PhoneStatus.hangup, icon: 'kfzt-gqx', color: '#b6b6b6', modalIcon: 'kfHangup', modalStatus: 'busy' },
+  [PhoneStatus.process]: { text: '处理中', value: PhoneStatus.process, icon: 'kfzt-jxzx', color: '#53c251', kickedText: '处理中被踢', modalIcon: 'kfBusy', modalStatus: 'busy' },
+  [PhoneStatus.autoOutCall]: { text: '自动外呼', value: PhoneStatus.autoOutCall, icon: 'kfzt-zdwhx', color: '#53c251', modalIcon: 'kfForecast', modalStatus: 'busy' },
 };
-export type TSeatStatus = keyof (typeof seatStatusMap);
 
 interface IGroupStatus {
   value: number,
@@ -163,13 +208,13 @@ export const callStatusMap = {
   conference: '正在主持当前多方通话',
   mute: '静音中',
   speaking: '通话中',
-  callFail: ''
+  callOutFail: ''
 }
-type CallStatusMap = typeof callStatusMap;
+type TCallStatus = keyof typeof callStatusMap;
 
 export interface ISeat {
   id: number,
-  status: TSeatStatus,
+  status: PhoneStatus,
   realname: string,
   _disabled: boolean,
   _intercomIconClassName?: string,
@@ -191,11 +236,11 @@ export interface IIVR {
   ivrId: number,
 }
 
-export const memberInitial = {
+export const memberInitial: IMember = {
   id: '', // 成员标识
   name: '', // 成员名
   isChairman: false, // 是否是会议主席
-  conferenceId: 0, // 会议id 
+  conferenceId: '', // 会议id 
   state: 0, // 成员是否加入
   mute: 0, // 成员是否静音
   time: 0 // 成员加入时间，用于显示时按时间排序

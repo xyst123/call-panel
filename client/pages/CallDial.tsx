@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import DialButtons from '@/pages/DialButtons';
-import { setting, ipccSetting } from '@/constant/outer';
-import { getSetting, callOut } from '@/service/phone';
-import { get, mapObject, handleRes } from '@/utils';
-import usePhone, { startCallOut } from '@/hooks/phone';
+import { derivation } from '@/constant/outer';
+import { getDisableUnsigned } from '@/service/phone';
+import { get } from '@/utils';
+import usePhone from '@/hooks/phone';
+import { actionCallOut } from '@/redux/actions/phone';
 import '@/style/CallDial.less';
 
+const { isToolBar, disableToolbar } = derivation;
 const inputStyleMap: Common.IObject<React.CSSProperties> = {
   withContent: {
     textAlign: 'center',
@@ -17,12 +19,11 @@ const inputStyleMap: Common.IObject<React.CSSProperties> = {
     fontSize: '14px'
   },
 }
-const disableToolbar = get(setting, 'isToolBar', false) && get(ipccSetting, 'disableToolbar', false);
+const realDisableToolbar = isToolBar && disableToolbar;
 
 const CallDial: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
   const [disableUnsigned, setDisableUnsigned] = useState(false); // 需要签署安全协议的企业（未付费使用企业）是否禁用掉外呼功能
-  const [callTaskData, setCallTaskData] = useState<null | object>(null);
   const input = useRef<HTMLInputElement>(null!);
   const dispatch = useDispatch();
 
@@ -36,21 +37,23 @@ const CallDial: React.FC<Common.IObject<any>> = () => {
     input.current.focus();
   }
 
-  const handleGetSetting = async () => {
-    const res = await getSetting();
-    handleRes(res, () => {
-      setDisableUnsigned(Boolean(get(res, 'data.permission.corp.CORP_SECURITY_BOOK', 0)));
-    })
+  const handleSetDisableUnsigned = async () => {
+    const disable = await getDisableUnsigned();
+    setDisableUnsigned(disable);
   }
 
   const checkAndCall = async () => {
-    if (disableToolbar) return; // 呼叫工具条暂时不让外呼
-    setCallTaskData(null);
-    await startCallOut(phone, dispatch)()
+    if (realDisableToolbar) return; // 呼叫工具条暂时不让外呼
+    dispatch({
+      type: 'PHONE_RESET', payload: {
+        callTaskData: true
+      }
+    })
+    dispatch(actionCallOut() as any)
   };
 
   useEffect(() => {
-    handleGetSetting()
+    handleSetDisableUnsigned()
   }, [])
 
   return <div className="call-dial">
@@ -74,7 +77,7 @@ const CallDial: React.FC<Common.IObject<any>> = () => {
         }
       });
     }} style={{ marginTop: '12px' }}></DialButtons>
-    <button className={`call-dial-call iconfont icon-hangup ${(disableToolbar || disableUnsigned) ? 'call-dial-call_disabled' : ''}`} onClick={checkAndCall}></button>
+    <button className={`call-dial-call iconfont icon-hangup ${(realDisableToolbar || disableUnsigned) ? 'call-dial-call_disabled' : ''}`} onClick={checkAndCall}></button>
   </div>
 };
 

@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 import { sipAdaptor } from '@/utils/sip';
 import { audioHangupSound } from '@/constant/element';
 import { IMember } from '@/constant/phone';
-import usePhone, { phoneReset, handleConference } from '@/hooks/phone';
+import { derivation } from '@/constant/outer';
+import usePhone from '@/hooks/phone';
+import { actionReset, actionStartConference } from '@/redux/actions/phone';
 import useGlobal from '@/hooks/global';
 import { sessionCheck, muteMember, deleteMember } from '@/service/phone';
 import { get, handleRes, mapObject, getDebug } from '@/utils';
@@ -12,10 +14,10 @@ import '@/style/CallConference.less';
 
 const waitingArray = [0, 1, 2];
 const callPanelDebug = getDebug('callpanel');
+const { isToolBar } = derivation
 
 const CallConference: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
-  const { global } = useGlobal();
 
   const dispatch = useDispatch();
 
@@ -26,7 +28,7 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
     const isSessionSeat = phone.isBusy && phone.callStatus !== 'conference';
     const isConferenceChairman = phone.callStatus === 'conference';
     if (audioHangupSound && (isSessionSeat || isConferenceChairman)) {
-      audioHangupSound.hangupFrom = 1;
+      audioHangupSound.hangUpFrom = 1;
     }
     if (phone.session.sessionId) {
       sessionCheck(phone.session.sessionId);
@@ -36,7 +38,7 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
       // 解决因为外呼异常，无法挂机的问题
       // 1s后如果还是没能正常挂机，强制恢复状态
       if (phone.isBusy && phone.callStatus === 'callOut') {
-        phoneReset(phone, dispatch)()
+        actionReset(phone, dispatch)
       }
     }, 1000);
   };
@@ -47,7 +49,11 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
   const handleAddMember = () => {
     dispatch({
       type: 'GLOBAL_SET_SELECT_MODAL',
-      payload: { type: 'conference', handler: handleConference(phone, dispatch).bind(null, 'conference') }
+      payload: {
+        type: 'conference', handler() {
+          dispatch(actionStartConference('conference'))
+        }
+      }
     })
   }
 
@@ -57,7 +63,7 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
     callPanelDebug(`[${type}member] data:%O`, member);
 
     const res = await muteMember(type, {
-      member: member.member,
+      member: member.id,
       conferenceId: phone.conference.conferenceId
     });
 
@@ -67,7 +73,7 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
         payload: {
           conference: {
             members: {
-              [member.member]: {
+              [member.id]: {
                 mute: !member.mute
               }
             }
@@ -83,12 +89,12 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
 
   const deleteMemberHandler = async (member: IMember) => {
     const res = await deleteMember({
-      member: member.member,
+      member: member.id,
       conferenceId: phone.conference.conferenceId
     });
 
     const newMembers = { ...phone.conference.members };
-    delete newMembers[member.member]
+    delete newMembers[member.id]
 
     handleRes(res, () => {
       dispatch({
@@ -103,8 +109,7 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
   }
 
   const handleDeleteMember = (member: IMember) => {
-    var self = this;
-    if (global.isToolBar) {
+    if (isToolBar) {
       deleteMemberHandler(member);
     } else {
       dispatch({
@@ -152,8 +157,8 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
         const buttons = getButtons(member);
         return <li className={`board-member ${memberLength > 3 && index < 3 ? 'board-member_small' : 'board-member_normal'}`}>
           <div className={`iconfont icon-member board-member-avatar ${member.state === 1 ? 'board-member-avatar_joined' : ''}`}></div>
-          <Tooltip title={member.memberName}>
-            <p className="board-member-name">{member.memberName}</p>
+          <Tooltip title={member.name}>
+            <p className="board-member-name">{member.name}</p>
           </Tooltip>
           {
             member.state === 1 ? <ul className="board-member-buttons">

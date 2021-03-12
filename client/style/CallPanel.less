@@ -18,6 +18,34 @@
       font-size: @font-normal;
     }
   }
+  &-toggle {
+    position: absolute;
+    top: 45px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 140px;
+    height: 30px;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.25);
+    font-size: @font-small;
+    cursor: pointer;
+    z-index: 1000;
+    transition: visibility 0.2s linear, opacity 0.2s linear;
+    &_close {
+      visibility: hidden;
+      opacity: 0;
+    }
+    &::before {
+      position: absolute;
+      top: -5px;
+      content: '';
+      border-top: 0px;
+      border-bottom: 5px solid rgba(0, 0, 0, 0.25);
+      border-left: 5px solid transparent;
+      border-right: 5px solid transparent;
+    }
+  }
   &-main {
     position: absolute;
     top: @title-height;

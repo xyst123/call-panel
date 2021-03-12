@@ -1,9 +1,34 @@
 interface HTMLAudioElementExtended extends HTMLAudioElement {
-  hangupFrom: number
+  hangUpFrom?: number,
+  _playing: boolean,
+  _play: () => Promise<void>,
+  _stop: () => void
 }
 
-export const audioConnectSound = document.querySelector('#call-connected-sound') as HTMLAudioElementExtended;
+const handleAudio = (audio: HTMLAudioElementExtended) => {
+  audio._play = audio.play;
+  audio._stop = () => {
+    audio.pause();
+    audio.currentTime = 0
+  }
+  audio.addEventListener('play', () => {
+    audio._playing = true;
+  })
+  audio.addEventListener('pause', () => {
+    audio._playing = false;
+  })
+  audio.addEventListener('ended', () => {
+    audio._playing = false
+  })
+  return audio;
+}
 
-export const audioHangupSound = document.querySelector('#call-hangup-sound') as HTMLAudioElementExtended;
+const getAudioElement = (id: string) => handleAudio(document.querySelector(`#${id}`) as HTMLAudioElementExtended)
 
-export const audioRingSound = document.querySelector('#call-ring-sound') as HTMLAudioElementExtended;
+export const audioConnectSound = getAudioElement('call-connected-sound');
+
+export const audioHangupSound = getAudioElement('call-hangup-sound');
+
+export const audioRingSound = getAudioElement('call-ring-sound');
+
+export const notificationSound = getAudioElement('notification-sound');

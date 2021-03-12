@@ -1,8 +1,9 @@
 import { get, assignState, resetState } from '@/utils';
-import { setting } from '@/constant/outer';
-import { PhoneMode, SessionMode } from '@/constant/phone';
+import { setting, corpPermission } from '@/constant/outer';
+import { IPhone, PhoneMode, TRestStatus, SessionMode, PhoneStatus } from '@/constant/phone';
 
 const callUser = get(setting, 'callUser', {});
+const softStatusOptions: PhoneStatus[] = get(corpPermission, 'OUTCALL_TASKFORECAST', false) ? [1, 2, 6, 0, 8] : [1, 2, 6, 0];
 const statusInitial = parseInt(get(callUser, 'status', 0));
 const intercomInitial = {
   intercomId: 0,
@@ -17,38 +18,40 @@ const conferenceInitial = {
   tip: '',
   conferenceId: '',
   members: {},
+  state: 0
 }
-const initialState = {
+const initialState: IPhone = {
   display: true,
+  toggleTipDisplay: false,
   mode: get(callUser, 'mode', PhoneMode.soft),
   statusCached: statusInitial,
   status: statusInitial,
-  statusExt: statusInitial === 2 ? parseInt(get(callUser, 'statusExt', 0)) : 0,
+  statusExt: (statusInitial === 2 ? parseInt(get(callUser, 'statusExt', 0)) : 0) as TRestStatus,
   statusSelectDisabled: false,
-  isAutoAnswerFirstTips: false,
+  statusOptions: softStatusOptions,
+  restStatusOptions: [],
+  isAutoAnswerFirstTips: true,
   outCallRandom: get(callUser, 'outcallRandom', false),
   outCallNumbers: [],
   outCallNumber: '',
   restStatusSwitch: get(callUser, 'restStatusSwitch', 0),
   sessionMode: SessionMode.empty,
-  callStatus: statusInitial === 7 ? 'process' : 'empty',
+  callStatus: statusInitial === PhoneStatus.process ? 'process' : 'empty',
   jitterBuffer: 0,
   isCaller: true,
   inNextAnswer: false,
   inNextAnswerCounter: 3,
-  autoAnswerTimer: null,
-  nextAnswerTimer: null,
   kickedOut: false,
   tip: '',
   callTaskData: null,
   dialingNumber: '',
   speakingNumber: '',
   speakingNumberExt: '',
+  showDial: false,
   intercom: { ...intercomInitial },
   conference: { ...conferenceInitial },
   session: {
     sessionId: 0,
-    hideCustomerNumber: true,
     mobileArea: '北京',
     username: '夏杨',
     vipLevel: 1,
@@ -68,11 +71,6 @@ export const phone = (
       return assignState(action.payload, state);
     case 'PHONE_RESET':
       return resetState(action.payload, state, initialState);
-    case 'PHONE_FAIL':
-      return assignState({
-        callStatus: 'callFail',
-        tip: action.payload
-      }, state);
     default:
       return state;
   }

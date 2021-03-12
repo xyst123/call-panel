@@ -1,4 +1,4 @@
-import { request, getRes } from '@/utils';
+import { request, getRes, get, getStorage } from '@/utils';
 import { seatStatusMap, groupStatusMap, PhoneMode, IMember } from '@/constant/phone';
 
 export const setPhoneMode = async (
@@ -22,7 +22,10 @@ export const setPhoneMode = async (
   }
 };
 
-export const getOutCallNumbers = async (): Promise<Common.IRes> => {
+export const getOutCallNumbers = async (): Promise<{
+  outCallNumbers: string[],
+  selectedOutCallNumber: string
+}> => {
   const message = {};
   try {
     const response = await request<Common.IObject<any>>({
@@ -30,13 +33,30 @@ export const getOutCallNumbers = async (): Promise<Common.IRes> => {
       url: `/api/callcenter/did/staff/list`,
     });
     const res = getRes(response, message);
-    return res
+    const { status, data = [] } = res;
+    if (!status) throw new Error('');
+    let selectedOutCallNumber = '';
+    if (data.length === 1) {
+      selectedOutCallNumber = data[0]
+    } else if (data.length > 1) {
+      selectedOutCallNumber = getStorage('outCallNumber');
+      if (!data.includes(selectedOutCallNumber)) {
+        selectedOutCallNumber = data[0]
+      }
+    }
+    return {
+      outCallNumbers: data,
+      selectedOutCallNumber
+    }
   } catch (error) {
-    return getRes(error, message);
+    return {
+      outCallNumbers: [],
+      selectedOutCallNumber: ''
+    }
   }
 };
 
-export const getSetting = async (): Promise<Common.IRes> => {
+export const getDisableUnsigned = async (): Promise<boolean> => {
   const message = {};
   try {
     const response = await request<Common.IObject<any>>({
@@ -44,9 +64,11 @@ export const getSetting = async (): Promise<Common.IRes> => {
       url: `/api/callcenter/settings/list`,
     });
     const res = getRes(response, message);
-    return res
+    const { status, data = {} } = res;
+    if (!status) throw new Error('');
+    return Boolean(get(data, 'permission.corp.CORP_SECURITY_BOOK', 0))
   } catch (error) {
-    return getRes(error, message);
+    return false
   }
 };
 
@@ -211,17 +233,6 @@ const handleSeats = (seats: Common.IObject<any>[]) => {
   });
 }
 
-const handleGroups = (groups: Common.IObject<any>[]) => {
-  groups.forEach((group) => {
-    const { value, modalIcon, modalStatus } = groupStatusMap[group.status] || {};
-    Object.assign(group, {
-      _disabled: ![1].includes(value),
-      _intercomIconClassName: modalIcon ? `icon-${modalIcon}` : '',
-      _intercomStatusClassName: modalStatus ? `item_${modalStatus}` : '',
-    })
-  });
-}
-
 export const getSeats = async (groupId?: number): Promise<Common.IRes> => {
   const message = {};
   try {
@@ -239,6 +250,17 @@ export const getSeats = async (groupId?: number): Promise<Common.IRes> => {
     return getRes(error, message);
   }
 };
+
+const handleGroups = (groups: Common.IObject<any>[]) => {
+  groups.forEach((group) => {
+    const { value, modalIcon, modalStatus } = groupStatusMap[group.status] || {};
+    Object.assign(group, {
+      _disabled: ![1].includes(value),
+      _intercomIconClassName: modalIcon ? `icon-${modalIcon}` : '',
+      _intercomStatusClassName: modalStatus ? `item_${modalStatus}` : '',
+    })
+  });
+}
 
 export const getTransfers = async (): Promise<Common.IRes> => {
   const message = {};
@@ -290,7 +312,7 @@ export const transfer = async (data: Common.IObject<any>): Promise<Common.IRes> 
   }
 };
 
-export const getThirdList = async (): Promise<Common.IRes> => {
+export const getThirdList = async (): Promise<any[]> => {
   const message = {};
   try {
     const response = await request<Common.IObject<any>>({
@@ -298,9 +320,11 @@ export const getThirdList = async (): Promise<Common.IRes> => {
       url: `/api/callcenter/settings/thirdplatform/list`,
     });
     const res = getRes(response, message);
-    return res
+    const { status, data } = res;
+    if (!status) throw new Error('');
+    return data
   } catch (error) {
-    return getRes(error, message);
+    return []
   }
 };
 
@@ -331,5 +355,24 @@ export const deleteMember = async (data: Common.IObject<any>): Promise<Common.IR
     return res
   } catch (error) {
     return getRes(error, message);
+  }
+};
+
+export const getIVR = async (sessionId: number): Promise<string> => {
+  const message = {};
+  try {
+    const response = await request<Common.IObject<any>>({
+      method: 'GET',
+      url: `/api/callcenter/session/ivr`,
+      data: {
+        sessionId
+      }
+    });
+    const res = getRes(response, message);
+    const { status, data } = res;
+    if (!status) throw new Error('');
+    return get(data, 'ivrPathName', '')
+  } catch (error) {
+    return '';
   }
 };

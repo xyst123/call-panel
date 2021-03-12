@@ -22,10 +22,8 @@ const Other: React.FC<{
   const isTransfer = actionText === modalMap.transfer.extData.action;
 
   const handleGetThirdList = async () => {
-    const res = await getThirdList();
-    handleRes(res, (data: any[]) => {
-      setThirdList(data)
-    }, () => { })
+    const thirdList = await getThirdList();
+    setThirdList(thirdList)
   }
 
   useEffect(() => {

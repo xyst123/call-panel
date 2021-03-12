@@ -1,7 +1,6 @@
 import { get, assignState, resetState } from '@/utils';
 import { modalMap, ModalType } from '@/constant/phone';
 const initialState = {
-  isToolBar: false,
   setting: get(window, 'setting', {}),
   modalConfig: {
     visible: false,

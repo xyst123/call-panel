@@ -1,4 +1,4 @@
-import { seatStatusMap, TSeatStatus } from '@/constant/phone';
+import { seatStatusMap, PhoneStatus } from '@/constant/phone';
 import { get, getType, getStackTrace, shuffle, getDebug } from '@/utils';
 import { getSIPList } from '@/service/sip';
 import { setting } from '@/constant/outer';
@@ -354,7 +354,7 @@ class SIPServer {
     this.debugWebRTC.on(DebugWebRTC.PARSERS.PARSER_CHECK_AUDIO_TRACKS, (audio: any) => {
       debugStats('audio data: %j', audio);
       if (audio.send.availableBandwidth === '0.0') this.debugWebRTCCount++;
-      if (this.debugWebRTCCount == 10) {
+      if (this.debugWebRTCCount === 10) {
         debugStats('audio data: warning');
       }
     });
@@ -365,7 +365,7 @@ class SIPServer {
 
     this.debugWebRTC.on(DebugWebRTC.PARSERS.PARSER_GET_STREAMS, (stream: any) => {
       debugStats('stream data: %j', stream);
-      this.sipAdaptor.dispatchEvent('jitterbuffer', {
+      this.sipAdaptor.dispatchEvent('jitterBuffer', {
         jitterBuffer: stream.audio.recv.googJitterBufferMs
       });
     });
@@ -380,7 +380,7 @@ class SIPServer {
       this.debugWebRTC.destroy();
       this.debugWebRTC = null;
       this.debugWebRTCCount = 0;
-      this.sipAdaptor.dispatchEvent('jitterbuffer', {
+      this.sipAdaptor.dispatchEvent('jitterBuffer', {
         jitterBuffer: 0
       })
     }
@@ -474,7 +474,7 @@ class SIPServer {
                 sipServer.log('ws服务 异常断开  代理状态 %s', sipAdaptor.status.tip);
                 try {
                   // 1、通话状态下连接失败，一直尝试重连，若电话结束未成功直接切换地址 isCalling = window.setting.callUser.status === 3
-                  if (callUser.status === 3) {
+                  if (callUser.status === PhoneStatus.calling) {
                     sipAdaptor.status === loginStatusMap.fail;
                     const isValidConnect = !sipServer.timestampConnect || (Math.abs(Date.now() - sipServer.timestampConnect) > 1000);
                     sipServer.log('ws连接服务【通话中】注册失败 %O', sipServer.sipUrl);
@@ -669,8 +669,9 @@ class SIPAdaptor {
       // TODO _nativeApi
       // window._nativeApi.detectAudioDevice();
     } else {
-      try {
-        window.navigator.mediaDevices
+      const { mediaDevices } = window.navigator;
+      if (mediaDevices) {
+        mediaDevices
           .getUserMedia({
             audio: true,
           })
@@ -698,18 +699,21 @@ class SIPAdaptor {
               status: this.status,
             });
           });
-      } catch (error) {
-        console.error(error);
+      } else {
         if (!window.location.protocol.startsWith('https:')) {
           this.status = sipAdaptorStatusMap.unsafe;
         }
         this.dispatchEvent('mediaError', {
           type: 'initError',
-          error,
+          error: 'TypeError: Cannot read property getUserMedia of undefined',
           status: this.status,
         });
       }
     }
+  }
+
+  getSession() {
+    return get(this, 'sipServer.session', null)
   }
 
   callSDK(methodName: string, options: Array<any> = []) {
@@ -749,8 +753,8 @@ class SIPAdaptor {
   // autoSwitch 用户是否手动变更状态
   connect(autoSwitch: boolean, options: {
     from: string
-    status: TSeatStatus
-    preset: TSeatStatus
+    status: PhoneStatus
+    preset: PhoneStatus
   }) {
     this.forceStop = false;
     const { sipServer } = this;
@@ -762,7 +766,7 @@ class SIPAdaptor {
       sip: sipServer.status.tip
     });
     if (this.status === sipAdaptorStatusMap.initializeFail) {
-      const isCalling = callUser.status === 3;
+      const isCalling = callUser.status === PhoneStatus.calling;
       const uaConnected = [loginStatusMap.error, loginStatusMap.success].includes(sipServer.loginStatus);
       if (isCalling || uaConnected) {
         const ua = get(sipServer, 'sdk.ua', null);

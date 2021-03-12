@@ -9,9 +9,8 @@ import Other from '@/pages/SelectModal/Other';
 import { get } from '@/utils';
 import { TabKey, ISeat, IGroup, IIVR, IModalCallbacks } from '@/constant/phone';
 import useGlobal from '@/hooks/global';
+
 import '@/style/Select-Modal.less';
-
-
 
 const { TabPane } = Tabs;
 

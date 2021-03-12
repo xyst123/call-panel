@@ -4,7 +4,8 @@ interface Window {
   debug: Function,
   CallPanel: any,
   cefQuery: boolean,
-  QiyuConnect: any
+  QiyuConnect: any,
+  _nativeApi: any,
 }
 
 interface Promise {

@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo, useImperativeHandle, ChangeEvent } from 'react';
-import { setting } from '@/constant/outer';
+import { derivation } from '@/constant/outer';
 import { get } from '@/utils';
 import { IIVR } from '@/constant/phone';
 import usePhone from '@/hooks/phone';
 import '@/style/Select-IVR.less';
+
+const { isToolBar } = derivation;
 
 const IVR: React.FC<{
   childRef: React.RefObject<any>
@@ -12,7 +14,7 @@ const IVR: React.FC<{
 }> = ({ childRef, onSelect, ...props }) => {
   const iframeRef = useRef<HTMLIFrameElement>(null!);
   const { phone } = usePhone();
-  const iframePath = `${window.location.origin}/chat/callcenter/page/ivr/cascader?isToolbar=${setting.isToolBar}&sessionId=${phone.session.sessionId}`;
+  const iframePath = `${window.location.origin}/chat/callcenter/page/ivr/cascader?isToolbar=${isToolBar}&sessionId=${phone.session.sessionId}`;
 
   useImperativeHandle(childRef, () => ({
     reload() {

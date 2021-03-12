@@ -6,11 +6,12 @@ import store from '@/redux/store';
 import { get } from '@/utils';
 import { setting } from '@/constant/outer';
 import { audioRingSound } from '@/constant/element';
-import { handleCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, handleConference, handleTransfer, phoneReset } from '@/hooks/phone';
+import { actionCallOut, actionIntercomCallOut, actionCallTask, actionSetStatus, actionStartConference, handleTransfer, actionReset } from '@/redux/actions/phone';
 
 import '@/style/reset.less';
 import '@/style/index.less';
 import '@/style/iconfont.less';
+import { AnyAction } from 'redux';
 
 // function requestPermission() {
 //   return new Promise((resolve, reject) => {
@@ -60,7 +61,7 @@ const component = <Provider store={store}>
 </Provider>
 
 export const sendCall = (params?: Common.IObject<any>) => {
-  handleCallOut(getState().phone, dispatch)(params)
+  dispatch(actionCallOut(params) as any)
 }
 
 export default component;

@@ -24,7 +24,12 @@
     display: block;
     font-size: 25px !important;
     z-index: 1;
+    transform: rotate(0);
+    transition: transform 0.5s;
     cursor: pointer;
+    &_hide {
+      transform: rotate(180deg);
+    }
   }
   &-area {
     text-align: center;

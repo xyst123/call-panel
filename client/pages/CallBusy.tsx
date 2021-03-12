@@ -1,28 +1,29 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { SessionMode, PhoneMode, callStatusMap } from '@/constant/phone';
+import { SessionMode, SessionType, SessionStatus, PhoneMode, callStatusMap } from '@/constant/phone';
 import DialButtons from '@/pages/DialButtons';
 import { get, hidePhoneNumber, getDebug } from '@/utils';
 import { sipAdaptor } from '@/utils/sip';
-import usePhone, { handleCallOut, handleIntercomCallOut, handleCallTask, startSetStatus, handleConference, handleTransfer, phoneReset } from '@/hooks/phone';
-import { setting, corpPermission } from '@/constant/outer';
+import usePhone from '@/hooks/phone';
+import { actionCallOut, actionIntercomCallOut, actionSetStatus, actionStartConference, actionJoin, handleTransfer, actionReset, actionAccept, actionCallTask } from '@/redux/actions/phone';
+import { derivation, setting, corpPermission } from '@/constant/outer';
 import { audioConnectSound, audioHangupSound, audioRingSound } from '@/constant/element';
 import { sessionCheck, intercomMute, intercomUnmute, mute, unmute } from '@/service/phone';
-import eventBus from '@/utils/eventBus';
+import { notifyToolbar } from '@/utils/phone';
+import globalVar from '@/globalVar';
 import { useDispatch } from 'react-redux';
 import '@/style/CallBusy.less';
 
-const callUser = get(setting, 'callUser', {});
+const { user, callUser, hideCustomerNumber } = derivation;
 const callPanelDebug = getDebug('callpanel');
 
 const CallBusy: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
   const [extNumber, setExtNumber] = useState('');
-  const [showDial, setShowDial] = useState(false);
   const countDownTimer = useRef<NodeJS.Timeout | null>(null);
   const [countDownNumber, setCountDownNumber] = useState(callUser.maxDealTime);
 
   const { callStatus, sessionMode } = phone;
-  const isRinging = ['callIn', 'callOut', 'joinIn', 'callFail'].includes(callStatus);
+  const isRinging = ['callIn', 'callOut', 'joinIn', 'callOutFail'].includes(callStatus);
   const dispatch = useDispatch();
 
   let callType = '', realNumber = '', realArea = '', realTip = '', username = '', vipLevel = 0, callTransfer: any = {}, showToggleDial = false;
@@ -43,7 +44,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
       // 外部通话-会话: 用户号码、通话标识、拨号盘开关、地域标识
       callType = 'session';
       const speakingNumber = get(phone, 'speakingNumber', '');
-      realNumber = get(phone, 'session.hideCustomerNumber', false) ? hidePhoneNumber(speakingNumber) : speakingNumber;
+      realNumber = hideCustomerNumber ? hidePhoneNumber(speakingNumber) : speakingNumber;
       showToggleDial = callStatus === 'speaking' && phone.mode !== PhoneMode.sip;
       realArea = get(phone, 'session.mobileArea', '');
       username = get(phone, 'session.username', '');
@@ -74,10 +75,14 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
     callPanelDebug('[colBye]');
     sipAdaptor.callSDK('bye');
 
+    if (globalVar.sessionType === SessionType.callIn) {
+      globalVar.sessionStatus = SessionStatus.bye;
+    }
+
     const isSessionSeat = phone.isBusy && phone.callStatus !== 'conference';
     const isConferenceChairman = phone.callStatus === 'conference';
     if (audioHangupSound && (isSessionSeat || isConferenceChairman)) {
-      audioHangupSound.hangupFrom = 1;
+      audioHangupSound.hangUpFrom = 1;
     }
     if (phone.session.sessionId) {
       sessionCheck(phone.session.sessionId);
@@ -87,7 +92,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
       // 解决因为外呼异常，无法挂机的问题
       // 1s后如果还是没能正常挂机，强制恢复状态
       if (phone.isBusy && phone.callStatus === 'callOut') {
-        phoneReset(phone, dispatch)()
+        actionReset(phone, dispatch)
       }
     }, 1000);
   };
@@ -179,7 +184,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         handler() {
           dispatch({
             type: 'GLOBAL_SET_SELECT_MODAL',
-            payload: { type: 'transfer', handler: handleTransfer(phone, dispatch) }
+            payload: { type: 'transfer', handler: handleTransfer }
           })
         },
       },
@@ -190,7 +195,11 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         handler() {
           dispatch({
             type: 'GLOBAL_SET_SELECT_MODAL',
-            payload: { type: 'conference', handler: handleConference(phone, dispatch).bind(null, 'create') }
+            payload: {
+              type: 'conference', handler() {
+                dispatch(actionStartConference('create'))
+              }
+            }
           })
         },
       },
@@ -211,24 +220,26 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         handler: handleBye
       },
     ],
-    callFail: [
+    callOutFail: [
       {
         show: true,
         color: 'gray',
         text: '取消',
-        handler: phoneReset
+        handler: actionReset
       },
       {
         show: true,
         color: 'green',
         text: '重拨',
         handler() {
-          if (phone.callTaskData) { handleCallTask(phone, dispatch)(phone.callTaskData); }
+          if (phone.callTaskData) {
+            dispatch(actionCallTask(phone.callTaskData) as any);
+          }
           else {
             if (phone.sessionMode === SessionMode.intercom) {
-              handleIntercomCallOut(phone, dispatch)(phone.intercom.remoteStaffId);
+              dispatch(actionIntercomCallOut(phone.intercom.remoteStaffId) as any);
             } else {
-              handleCallOut(phone, dispatch)();
+              dispatch(actionCallOut() as any)
             }
           }
         },
@@ -239,33 +250,9 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         show: phone.mode !== PhoneMode.sip && (sessionMode === SessionMode.intercom || !phone.inNextAnswer),
         color: 'green',
         text: '接起',
-        handler(options: Common.IObject<any>, autoAnswer: boolean) {
-          callPanelDebug('[colAccept] %O autoanswer %O', options, autoAnswer);
-          if (!autoAnswer) {
-            clearTimeout(phone.autoAnswerTimer);
-          }
-          // TODO accept
-          eventBus.dispatchEvent('accept');
-          dispatch({
-            type: 'PHONE_SET',
-            payload: {
-              display: false
-            }
-          })
-
-          if (!options) sipAdaptor.accept();
-
-          dispatch({
-            type: 'PHONE_SET',
-            payload: {
-              callStatus: 'speaking',
-              tip: callStatusMap.speaking
-            }
-          })
-
-          audioRingSound.pause();
-          audioRingSound.currentTime = 0;
-        },
+        handler() {
+          dispatch(actionAccept())
+        }
       },
       {
         show: phone.mode !== PhoneMode.sip && sessionMode !== SessionMode.intercom && phone.inNextAnswer,
@@ -279,28 +266,9 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         show: phone.mode !== PhoneMode.sip,
         color: 'green',
         text: '加入',
-        handler(mode?: number) {
-          callPanelDebug('[colJoin]');
-          dispatch({
-            type: 'PHONE_SET',
-            payload: {
-              display: false
-            }
-          })
-          if (mode !== 2) sipAdaptor.accept();
-          dispatch({
-            type: 'PHONE_SET',
-            payload: {
-              callStatus: 'conference',
-              tip: '通话中',
-              conference: {
-                tip: callStatusMap.conference
-              }
-            }
-          })
-          audioRingSound.pause();
-          audioRingSound.currentTime = 0;
-        },
+        handler() {
+          dispatch(actionJoin())
+        }
       },
     ],
     process: [
@@ -310,21 +278,23 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         text: '完成处理',
         async handler() {
           callPanelDebug("[overprocess] callUser %O", callUser);
-          startSetStatus(phone, dispatch)({
-            value: [callUser.settedStatus, callUser.settedStatusExt],
-            type: 'over-process',
+          actionSetStatus({
+            phone, dispatch, options: {
+              value: [callUser.settedStatus, callUser.settedStatusExt],
+              type: 'over-process',
+            }
           });
 
-          // this.$emit('notifytoolbar', {
-          //   cmd: 'overProcess',
-          //   data: {
-          //     address: this.data.mobilearea,
-          //     usernumber: this.data.speakingnumbers,
-          //     sessionid: this.data.sessionid,
-          //     staffid: user.id,
-          //     staffname: user.username
-          //   }
-          // });
+          notifyToolbar({
+            cmd: 'overProcess',
+            data: {
+              address: phone.session.mobileArea,
+              usernumber: phone.speakingNumber,
+              sessionid: phone.session.sessionId,
+              staffid: user.id,
+              staffname: user.username
+            }
+          })
         },
       },
     ],
@@ -372,8 +342,8 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
         return renderButtons('speaking');
       case 'conference':
         return renderButtons('conference');
-      case 'callFail':
-        return renderButtons('callFail');
+      case 'callOutFail':
+        return renderButtons('callOutFail');
       case 'callIn':
         return phone.mode === PhoneMode.sip ? <p className="call-busy-text">请通过SIP话机接起客户</p> : renderButtons('callIn');
       case 'joinIn':
@@ -417,7 +387,15 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
     {/* TODO 会议-tip */}
     {realTip ? <p className="call-busy-tip">{realTip}</p> : null}
     {/* TODO 会话-拨号面板 */}
-    {showToggleDial ? <i className="call-busy-toggle iconfont icon-downloadcenterx" onClick={setShowDial.bind(null, !showDial)}></i> : null}
+    {showToggleDial ? <i className={`call-busy-toggle iconfont icon-downloadcenterx ${phone.showDial ? '' : 'call-busy-toggle_hide'}`} onClick={() => {
+      dispatch({
+        type: 'PHONE_SET',
+        payload: {
+          showDial: !phone.showDial
+        }
+      })
+    }}></i> : null
+    }
     {realArea ? <p className="call-busy-area">{realArea}</p> : null}
 
     {/* 【振铃-动画区】 */}
@@ -427,15 +405,16 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
     </div>
 
     {/* 【通话-用户信息】 */}
-    {callType === 'intercom' ?
-      <p className="call-busy-name"></p> :
-      callType === 'session' ?
-        <>
-          {username ? <p className="call-busy-name">{username}</p> : null}
-          {vipLevel ? <i className={`call-busy-vip iconfont icon-vip${vipLevel}`}></i> : null}
-          {callTransfer.type === 1 ? <p className="call-busy-tip">转接自 {callTransfer.transferFrom}</p> : null}
-        </> :
-        null
+    {
+      callType === 'intercom' ?
+        <p className="call-busy-name"></p> :
+        callType === 'session' ?
+          <>
+            {username ? <p className="call-busy-name">{username}</p> : null}
+            {vipLevel ? <i className={`call-busy-vip iconfont icon-vip${vipLevel}`}></i> : null}
+            {callTransfer.type === 1 ? <p className="call-busy-tip">转接自 {callTransfer.transferFrom}</p> : null}
+          </> :
+          null
     }
 
     {/* 【通话-状态提示信息】 */}
@@ -446,14 +425,14 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
     {renderByCallStatus()}
 
     {/* 【外部通话：拨号盘】 */}
-    <div className={`call-busy-dial call-busy-dial_${showDial ? 'show' : 'hide'}`}>
+    <div className={`call-busy-dial call-busy-dial_${phone.showDial ? 'show' : 'hide'}`}>
       <input type="text" value={extNumber} readOnly={true} />
       <DialButtons className="buttons" handler={(button: string) => {
         setExtNumber(extNumber + button);
         sipAdaptor.callSDK('sendDigit', [button]);
       }}></DialButtons>
     </div>
-  </div>
+  </div >
 };
 
 export default CallBusy;

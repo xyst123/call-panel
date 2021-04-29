@@ -473,7 +473,7 @@ class SIPServer {
               if (hasError) {
                 sipServer.log('ws服务 异常断开  代理状态 %s', sipAdaptor.status.tip);
                 try {
-                  // 1、通话状态下连接失败，一直尝试重连，若电话结束未成功直接切换地址 isCalling = window.setting.callUser.status === 3
+                  // 1、通话状态下连接失败，一直尝试重连，若电话结束未成功直接切换地址
                   if (callUser.status === PhoneStatus.calling) {
                     sipAdaptor.status === loginStatusMap.fail;
                     const isValidConnect = !sipServer.timestampConnect || (Math.abs(Date.now() - sipServer.timestampConnect) > 1000);

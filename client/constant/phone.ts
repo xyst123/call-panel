@@ -114,7 +114,7 @@ export interface IPhone {
   }
   // 外部通话-多方相关
   conference: {
-    sessionId: string,
+    sessionId: number,
     chairmanId: string, // 主持人
     chairmanName: string,
     tip: string, // 信息标识

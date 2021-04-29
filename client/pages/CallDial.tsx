@@ -3,7 +3,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import DialButtons from '@/pages/DialButtons';
 import { derivation } from '@/constant/outer';
 import { getDisableUnsigned } from '@/service/phone';
-import { get } from '@/utils';
 import usePhone from '@/hooks/phone';
 import { actionCallOut } from '@/redux/actions/phone';
 import '@/style/CallDial.less';

@@ -4,5 +4,6 @@
 - 新需求补全
 - 完成处理等按钮调用工具条方法
 - 引入cef_native_api_v3.14
-- 
 - cleanSpeakingnumbersExt
+- 文档
+- 单元测试

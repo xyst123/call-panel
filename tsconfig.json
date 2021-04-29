@@ -15,7 +15,10 @@
     "skipLibCheck": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
-    "typeRoots": ["node_modules/@types", "client"],
+    "typeRoots": [
+      "node_modules/@types",
+      "client"
+    ],
     "baseUrl": ".",
     "paths": {
       "@/*": [
@@ -23,6 +26,11 @@
       ]
     }
   },
-  "include": ["client/**/*.ts", "client/**/*.tsx", "client/router.jsx"],
-  "exclude": ["node_modules/**"]
+  "include": [
+    "client/**/*.ts",
+    "client/**/*.tsx",
+  ],
+  "exclude": [
+    "node_modules/**"
+  ]
 }

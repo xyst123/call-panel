@@ -393,6 +393,7 @@ export const actionSetStatus = (options: Common.IObject<any>) => (dispatch: Stor
   }, 1000);
 }
 
+// 【会议】成员加入会议
 export const actionAddConferenceMember = (options: Common.IObject<any>,
   state: number) => (dispatch: Store.dispatch) => {
     const phone = getPhone();
@@ -408,19 +409,23 @@ export const actionAddConferenceMember = (options: Common.IObject<any>,
       state
     })
 
-    const { isChairman } = existMember
+    const conferencePayload = {
+      members: {
+        ...conference.members,
+        [existMember.id]: existMember
+      }
+    }
+    if (existMember.isChairman) {
+      Object.assign(conferencePayload, {
+        chairmanId: existMember.id,
+        chairmanName: existMember.name
+      })
+    }
 
     dispatch({
       type: 'PHONE_SET',
       payload: {
-        conference: {
-          chairmanId: isChairman ? existMember.id : conference.chairmanId,
-          chairmanName: isChairman ? existMember.name : conference.chairmanName,
-          members: {
-            ...conference.members,
-            [existMember.id]: existMember
-          }
-        }
+        conference: conferencePayload
       }
     })
   }
@@ -538,7 +543,7 @@ export const actionJoin = (mode?: PhoneMode) => (dispatch: Store.dispatch) => {
   audioRingSound._stop();
 }
 
-// 处理转接
+// 【转接】处理转接
 export const handleTransfer = async (data: Common.IObject<any> = {}) => {
   let phone = getPhone();
   callPanelDebug('[sendTransfer] data:%O', data);
@@ -598,6 +603,8 @@ export const actionHangup = (options: Common.IObject<any>, from = '') => async (
     payload
   })
   audioRingSound._stop();
+  // TODO
+  // nodeRingSound.currentTime = 0;
 }
 
 interface IActionAccept {

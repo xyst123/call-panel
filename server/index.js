@@ -68,7 +68,7 @@ if (env === 'dev') {
         );
       });
     } catch (error) {
-      console.error(111, error);
+      console.error(error);
     }
   };
   useKoaWebpack();

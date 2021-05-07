@@ -95,7 +95,6 @@ export const Select: React.FC<{
           return React.cloneElement(child, {
             onOptionClick(result: Common.IValueLabel) {
               if (result.value !== valueLabel.value) {
-                setValueLabel(result);
                 onChange(result.value)
               }
               setShowOptions(false)

@@ -4,6 +4,7 @@ const webpack = require('webpack');
 const merge = require('webpack-merge');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const HappyPack = require('happypack');
 const lessToJs = require('less-vars-to-js');
 
@@ -137,6 +138,12 @@ const baseConfig = {
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'dev'),
     }),
+    new CopyWebpackPlugin([
+      {
+        from: resolve('client/static'),
+        to: 'static',
+      },
+    ]),
   ],
 };
 

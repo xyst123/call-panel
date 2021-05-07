@@ -13,10 +13,16 @@
   <link rel="shortcut icon" sizes="48x48" href="/images/favicon.png">
   <link rel="stylesheet" href="//at.alicdn.com/t/font_2088798_tlzwu1xy8z.css">
   <link rel="manifest" href="/manifest.json">
-  <script src="https://qiyukf.nosdn.127.net/prd/res/lib/qiyuconnect_v3.14_81693b6eb835f223360c5ad0023d0484.js"></script>
+  <script type="text/javascript"
+          src="https://qiyukf.nosdn.127.net/prd/res/lib/qiyuconnect_v3.14_81693b6eb835f223360c5ad0023d0484.js"></script>
 </head>
 
 <body>
+  <script type="text/javascript" src="/static/js/nim_base_v2.8.3.js"></script>
+  <script type="text/javascript" src="/static/js/nim_v2.8.3.js"></script>
+  <script type="text/javascript" src="/static/js/qiyuconnect_4.0.0.min.js"></script>
+  <script type="text/javascript" src="/static/js/debug.js"></script>
+
   <video id="qiyu-phone" autoPlay></video>
   <audio src="https://ysf.qiyukf.net/ysf_callin_ring.mp3" id="call-ring-sound" loop preload></audio>
   <audio src="https://res.qiyukf.net/prd/res/audio/connected.mp3?_v=1541492435774" id="call-connected-sound"
@@ -30,9 +36,9 @@
       const callPanel = new CallPanel({
         root: 'root'
       });
-      setTimeout(() => {
-        // callPanel.sendCall({ phone: '17610217100' })
-      }, 2000)
+      // setTimeout(() => {
+      //   callPanel.sendCall({ phone: '17610217100' })
+      // }, 2000)
     }
   </script>
 </body>

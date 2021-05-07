@@ -70,7 +70,9 @@ export const request = async <T>({
   headers = {},
 }: IRequestOptions): Promise<T> => {
   method = method.toUpperCase();
-  const realParams = {};
+  const realParams = {
+    token: '6GX1LMUE3NZWTHYUKQIWWBU2JQ3HVIK5'
+  };
   if (method === 'GET') {
     Object.assign(realParams, params, data);
   } else {

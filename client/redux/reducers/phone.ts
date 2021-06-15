@@ -12,7 +12,7 @@ const intercomInitial = {
   intercomFlag: ''
 }
 const conferenceInitial = {
-  sessionId: '',
+  sessionId: 0,
   chairmanId: '',
   chairmanName: '',
   tip: '',

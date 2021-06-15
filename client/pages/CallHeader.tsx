@@ -88,8 +88,7 @@ const CallHeader: React.FC<Common.IObject<any>> = () => {
               }
             })
           }
-
-          dispatch(actionIntercomCallOut(remoteStaffId) as any);
+          dispatch(actionIntercomCallOut());
         }
       }
     })

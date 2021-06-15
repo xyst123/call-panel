@@ -75,6 +75,7 @@ export const getDisableUnsigned = async (): Promise<boolean> => {
 export const callOut = async (dialNumber: string, outCallNumber: string): Promise<Common.IRes> => {
   const message = {
     '-1': '未知错误',
+    '4000': '电话功能被禁用',
     '8150': '电话功能被禁用'
   };
   try {

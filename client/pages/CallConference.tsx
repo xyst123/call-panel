@@ -7,13 +7,12 @@ import usePhone from '@/hooks/phone';
 import { actionReset, actionStartConference } from '@/redux/actions/phone';
 import useGlobal from '@/hooks/global';
 import { sessionCheck, muteMember, deleteMember } from '@/service/phone';
-import { get, handleRes, mapObject, getDebug } from '@/utils';
+import { get, handleRes, mapObject, callPanelDebug } from '@/utils';
 import { useDispatch } from 'react-redux';
 import { Tooltip } from 'ppfish';
 import '@/style/CallConference.less';
 
 const waitingArray = [0, 1, 2];
-const callPanelDebug = getDebug('callpanel');
 const { isToolBar } = derivation
 
 const CallConference: React.FC<Common.IObject<any>> = () => {
@@ -168,10 +167,10 @@ const CallConference: React.FC<Common.IObject<any>> = () => {
                 </Tooltip>)
               }
             </ul> : <ul className="board-member-waiting">
-                {
-                  waitingArray.map((item) => (<li key={item}></li>))
-                }
-              </ul>
+              {
+                waitingArray.map((item) => (<li key={item}></li>))
+              }
+            </ul>
           }
         </li>
       })}

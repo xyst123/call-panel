@@ -6,7 +6,7 @@ import store from '@/redux/store';
 import { get } from '@/utils';
 import { setting } from '@/constant/outer';
 import { audioRingSound } from '@/constant/element';
-import { actionCallOut, actionIntercomCallOut, actionCallTask, actionSetStatus, actionStartConference, handleTransfer, actionReset } from '@/redux/actions/phone';
+import { actionCallOut } from '@/redux/actions/phone';
 
 import '@/style/reset.less';
 import '@/style/index.less';

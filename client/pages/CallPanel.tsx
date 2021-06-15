@@ -9,7 +9,7 @@ import { sipAdaptor } from '@/utils/sip';
 import { Modal, message } from 'ppfish';
 import IntercomModal from '@/pages/SelectModal';
 import { SessionType, ToggleTrigger, SessionStatus, callStatusMap, PhoneMode, seatStatusMap, PhoneStatus, TRestStatus, CallDirection, SessionMode } from '@/constant/phone';
-import { get, delay, iterateObject, getDebug, hidePhoneNumber, getType } from '@/utils';
+import { get, iterateObject, sessionDebug, callPanelDebug, hidePhoneNumber, getType } from '@/utils';
 import { notifyToolbar, preserveAutoAnswerSwitch, navigateToServingPage, showNotification, checkCallStatus, sdkSetStatusFailed } from '@/utils/phone';
 import { getIVR } from '@/service/phone'
 import { derivation } from '@/constant/outer';
@@ -22,8 +22,6 @@ import '@/style/CallPanel.less';
 import globalVar from '@/globalVar';
 
 const { user, callUser, isToolBar, hideCustomerNumber } = derivation;
-const sessionDebug = getDebug('session');
-const callPanelDebug = getDebug('callpanel');
 
 preserveAutoAnswerSwitch(get(callUser, 'autoAnswerSwitch', 0));
 
@@ -143,19 +141,19 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
           tip: callStatusMap[status]
         }
       } : {
-          callStatus: status,
-          tip: callStatusMap[status],
-        }
+        callStatus: status,
+        tip: callStatusMap[status],
+      }
     });
     audioRingSound._play();
   }
 
   useEffect(() => {
     window.addEventListener('unload', () => {
-      sipAdaptor.disConnect()
+      sipAdaptor.disconnect()
     })
 
-    // 注册sipAdaptor消息回调
+    // 注册sipAdaptor事件回调
     iterateObject({
       // 媒体对象检测
       mediaError(options: Common.IObject<any>) {
@@ -163,16 +161,19 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
       },
       // 来电事件
       ringing(options: Common.IObject<any>) {
-        // 目前1和4弹屏，2和3直接接听
         const sessionType = options.type;
-        if ([SessionType.callOut, SessionType.listener, SessionType.intercomOut].includes(sessionType)) {
-          return sipAdaptor.accept();
-        } else if (sessionType === 6) {
-          handleRinging(true);
-        } else {
-          handleRinging();
+
+        if (![SessionType.empty, SessionType.callOut, SessionType.listener].includes(sessionType)) {
+          clearTimeout(globalVar.resetAfterByeTimer)
         }
 
+        if ([SessionType.callOut, SessionType.listener, SessionType.intercomOut].includes(sessionType)) {
+          // 直接接听
+          return sipAdaptor.accept();
+        }
+
+        // 振铃
+        handleRinging(sessionType === SessionType.conference);
         globalVar.sessionType = sessionType;
         globalVar.sessionStatus = sessionType === SessionType.callIn ? SessionStatus.ring : SessionStatus.empty
       },
@@ -183,7 +184,7 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
 
         // YSF-32256 呼叫工具条设置隐号且不能外呼的情况下, 面板不显示号码
         const isFromToolbar = options.source === 'toolbar'; // 是否是呼叫工具条触发此回调
-        const canCallOut = [1, 4, 5, 6].includes(phone.status); // 可外呼状态
+        const canCallOut = phone.canCallOut || phone.status === PhoneStatus.hangup; // 可外呼状态
 
         const hideNumber = hideCustomerNumber && isFromToolbar && !canCallOut;
 
@@ -209,11 +210,36 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
           }
         })
       },
+      // 提示用户重启浏览器
+      warning() {
+        dispatch({
+          type: 'GLOBAL_SET',
+          payload: {
+            modalConfig: {
+              visible: true,
+              cancelButtonDisabled: true,
+              children: '浏览器WEBRTC模块出现内部错误，请重启浏览器恢复',
+              onOk() {
+                dispatch({ type: 'GLOBAL_RESET', payload: { modalConfig: true } })
+              }
+            }
+          }
+        })
+      },
+      // 拨号中上报延迟信息
+      jitterBuffer(options: any) {
+        dispatch({
+          type: 'PHONE_SET',
+          payload: {
+            jitterBuffer: options.jitterBuffer
+          }
+        })
+      },
       failed(options: Common.IObject<any>) {
         if (globalVar.sessionStatus === SessionStatus.ring) {
           callPanelDebug("[onsessionend] data %O callUser %O", options, callUser);
 
-          const { statusCached, statusExt } = phone
+          const { statusCached, statusExt } = phone;
           // 取通话前的暂存状态
           const statusPreset = statusCached === PhoneStatus.rest ? [statusCached, statusExt] : statusCached;
 
@@ -232,13 +258,12 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
         callPanelDebug('[failed] 会话错误 sessionStatus %O data %O callUser %O', globalVar.sessionStatus, options, callUser);
       },
       ended(options: Common.IObject<any>) {
-        callPanelDebug('[toolbar] emit sdkInit options %O ', options);
+        callPanelDebug('[ended] 会话结束 data %O callUser %O', options, callUser);
       },
       // 面板保持展开的开关初始化
       sdkInit(options: Common.IObject<any>) {
+        globalVar.keepPanelUnfoldSwitch = get(options, 'data.keepPanelUnfoldSwitch', false);
         callPanelDebug('[toolbar] emit sdkInit options %O ', options);
-        globalVar.keepPanelUnfoldSwitch = get(options, 'data.keepPanelUnfoldSwitch', false)
-
       },
       sdkSetStatus(options: Common.IObject<any>) {
         // 通过工具条改变坐席服务状态
@@ -266,31 +291,6 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
           dispatch(actionToggle(onoff, false, { trigger: ToggleTrigger.sdk }));
         }
       },
-      // 提示用户重启浏览器
-      warning(options: any) {
-        dispatch({
-          type: 'GLOBAL_SET',
-          payload: {
-            modalConfig: {
-              visible: true,
-              cancelButtonDisabled: true,
-              children: '浏览器WEBRTC模块出现内部错误，请重启浏览器恢复',
-              onOk() {
-                dispatch({ type: 'GLOBAL_RESET', payload: { modalConfig: true } })
-              }
-            }
-          }
-        })
-      },
-      // 拨号中上报延迟信息
-      jitterBuffer(options: any) {
-        dispatch({
-          type: 'PHONE_SET',
-          payload: {
-            jitterBuffer: options.jitterBuffer
-          }
-        })
-      }
     }, (handler, event) => {
       sipAdaptor.addEventListener(event, handler)
     })
@@ -406,7 +406,7 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
           }
         })
       },
-      ondisconnect: sipAdaptor.disConnect,
+      ondisconnect: sipAdaptor.disconnect,
       onkickout() {
         dispatch({
           type: 'PHONE_SET',
@@ -881,11 +881,11 @@ const CallPanel: React.FC<Common.IObject<any>> = () => {
               remoteStaffId: options.calleeStaffId,
               intercomFlag: '呼叫客服'
             } : {
-                intercomId: options.intercomId,
-                remoteStaffName: options.callerName,
-                remoteStaffId: options.callerStaffId,
-                intercomFlag: '企业内部通话'
-              }
+              intercomId: options.intercomId,
+              remoteStaffName: options.callerName,
+              remoteStaffId: options.callerStaffId,
+              intercomFlag: '企业内部通话'
+            }
           };
 
           callPanelDebug('[onintercombegin] data %O callUser %O', options, callUser);

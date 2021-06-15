@@ -260,8 +260,6 @@ export const iterateMatchDOM = (DOM: HTMLElement, target: HTMLElement): boolean 
   return iterateMatchDOM(DOM.parentNode as HTMLElement, target);
 };
 
-export const getDebug = (type: string): Function => window.debug ? window.debug(`callcenter:${type}`) : Function.prototype;
-
 export const getStackTrace = () => {
   const object: any = {};
   Error.captureStackTrace(object, getStackTrace);
@@ -315,4 +313,9 @@ export const resetState = (data: Object, state: any, initialState: any) => {
 
 export const limitLength = (string: string, limit: number) => string.length > limit ? `${string.slice(0, limit - 1)}...` : string;
 
-
+const getDebug = (type: string): Function => window.debug ? window.debug(`callcenter:${type}`) : Function.prototype;
+export const sessionDebug = getDebug('session');
+export const callPanelDebug = getDebug('callpanel');
+export const toolbarDebug = getDebug('toolbar');
+export const sipDebug = getDebug('sipserver');
+export const adaptorDebug = getDebug('adaptor');

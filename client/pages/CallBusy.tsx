@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { SessionMode, SessionType, SessionStatus, PhoneMode, callStatusMap } from '@/constant/phone';
 import DialButtons from '@/pages/DialButtons';
-import { get, hidePhoneNumber, getDebug } from '@/utils';
+import { get, hidePhoneNumber, callPanelDebug } from '@/utils';
 import { sipAdaptor } from '@/utils/sip';
 import usePhone from '@/hooks/phone';
 import { actionCallOut, actionIntercomCallOut, actionSetStatus, actionStartConference, actionJoin, handleTransfer, actionReset, actionAccept, actionCallTask } from '@/redux/actions/phone';
@@ -14,7 +14,6 @@ import { useDispatch } from 'react-redux';
 import '@/style/CallBusy.less';
 
 const { user, callUser, hideCustomerNumber } = derivation;
-const callPanelDebug = getDebug('callpanel');
 
 const CallBusy: React.FC<Common.IObject<any>> = () => {
   const { phone } = usePhone();
@@ -88,7 +87,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
       sessionCheck(phone.session.sessionId);
     }
 
-    setTimeout(() => {
+    globalVar.autoAnswerTimer = setTimeout(() => {
       // 解决因为外呼异常，无法挂机的问题
       // 1s后如果还是没能正常挂机，强制恢复状态
       if (phone.isBusy && phone.callStatus === 'callOut') {
@@ -237,7 +236,7 @@ const CallBusy: React.FC<Common.IObject<any>> = () => {
           }
           else {
             if (phone.sessionMode === SessionMode.intercom) {
-              dispatch(actionIntercomCallOut(phone.intercom.remoteStaffId) as any);
+              dispatch(actionIntercomCallOut() as any);
             } else {
               dispatch(actionCallOut() as any)
             }

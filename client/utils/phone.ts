@@ -1,11 +1,10 @@
 import { ipccSetting } from '@/constant/outer';
-import { get, limitLength, getDebug } from '@/utils/index';
+import { get, limitLength, toolbarDebug } from '@/utils/index';
 import { appConfig } from '@/constant/outer';
 import { IExtendedPhone, PhoneMode, PhoneStatus, TRestStatus } from '@/constant/phone';
 import { sipAdaptor } from '@/utils/sip';
 import { notificationSound } from '@/constant/element';
 
-const toolbarDebug = getDebug('toolbar');
 export const notifyToolbar = (data: Common.IObject<any>) => {
   toolbarDebug("[notify] data %O  selfWindow %O", data, window.parent === window);
   if (window.parent === window) return;
@@ -125,7 +124,7 @@ export const checkCallStatus = ({
   hasInit, canCallOut, isBusy
 }: ICheckCallStatus, phone: IExtendedPhone) => {
   // 软电话模式下检查sdk是否初始化完成
-  if (hasInit && phone.mode === PhoneMode.soft && sipAdaptor.status.code !== 0) return sipAdaptor.status.tip;
+  if (hasInit && phone.mode === PhoneMode.soft && sipAdaptor.status.code !== 0) return hasInit;
   if (canCallOut && !phone.canCallOut) return '电话服务需为在线或者挂起状态，才可外呼客户';
   if (isBusy && phone.isBusy && phone.callStatus !== 'callOutFail') return '当前正在通话，不允许外呼';
   return ''

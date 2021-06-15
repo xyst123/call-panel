@@ -1,10 +1,7 @@
 import { seatStatusMap, PhoneStatus } from '@/constant/phone';
-import { get, getType, getStackTrace, shuffle, getDebug } from '@/utils';
+import { get, getType, getStackTrace, shuffle, sipDebug, adaptorDebug } from '@/utils';
 import { getSIPList } from '@/service/sip';
 import { setting } from '@/constant/outer';
-
-const sipDebug = getDebug('sipserver');
-const adaptorDebug = getDebug('sipserver');
 
 interface IServerOptions {
   codeTip: ICodeTip,
@@ -154,18 +151,18 @@ class SIPServer {
   sdk: any;
   loginStatus: ICodeTip;
   session: any;
+  lbsServerList: Array<any>; // lbs 列表
+  localServerList: Array<any>; // 本地列表
+  selectType: number; // 用哪种规则选取服务 0-顺序 1-随机
+  serverEmpty: boolean;  // 服务是否取空，lbs与本地均无可用服务
+  sdkType: string;
 
   private lbsGetting: boolean;
   private lbsRetryCount: number;  // 重试次数
-  private lbsServerList: Array<any>; // lbs 列表
-  private localServerList: Array<any>; // 本地列表
   private serverListFrom: number; // 0-本地 1-异步lbs
   private serverList: Array<any>; // 使用中的服务列表
   private availableServerList: Array<any>;  // 使用中的可用的服务列表
-  private selectType: number; // 用哪种规则选取服务 0-顺序 1-随机
   private lbsError: boolean;  // SIP代理状态
-  private serverEmpty: boolean;  // 服务是否取空，lbs与本地均无可用服务
-  private sdkType: string;
   private selectedIndex: number;  // 当顺序选择时记录选中下标, 默认-1
   private sipUrl: string;
   private sipAdaptor: SIPAdaptor;
@@ -784,12 +781,12 @@ class SIPAdaptor {
     adaptorDebug('connect %s', getStackTrace());
   };
 
-  disConnect() {
+  disconnect() {
     const { sdk } = this.sipServer
     sdk.ua && sdk.ua.stop();
     this.sipServer.isWorking = false;
     this.forceStop = true;
-    adaptorDebug('disConnect %s', getStackTrace());
+    adaptorDebug('disconnect %s', getStackTrace());
   }
 
   addEventListener(event: string, callback: (options: any) => void, scope: object = {}) {

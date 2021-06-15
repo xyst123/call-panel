@@ -1,7 +1,7 @@
 import { IExtendedPhone, SessionType, SessionStatus, SessionMode, callStatusMap, seatStatusMap, PhoneStatus, restStatusMap, TRestStatus, ToggleTrigger, PhoneMode, memberInitial } from '@/constant/phone';
 import { derivation } from '@/constant/outer';
 import store from '@/redux/store';
-import { handleRes, get, getDebug, setStorage, getType } from '@/utils';
+import { handleRes, get, callPanelDebug, setStorage, getType } from '@/utils';
 import { notifyToolbar, checkCallStatus, sdkSetStatusFailed, sendMessage } from '@/utils/phone';
 import { sipAdaptor } from '@/utils/sip';
 import { audioHangupSound, audioRingSound } from '@/constant/element';
@@ -12,7 +12,6 @@ import globalVar from '@/globalVar';
 import { message } from 'ppfish';
 
 const { callUser, isToolBar } = derivation;
-const callPanelDebug = getDebug('callpanel');
 const { getState } = store;
 
 const getPhone = () => enhancePhone(getState().phone);
@@ -41,10 +40,15 @@ const showSecurityBookModal = () => (dispatch: Store.dispatch) => {
   })
 }
 
-const callOutRequest = (realDialNumber: string, outCallNumber: string, callback = Function.prototype) => async (dispatch: Store.dispatch) => {
-  let phone = getPhone();
-  const res = await callOut(realDialNumber, outCallNumber);
+interface ICallOutRequest {
+  dialNumber: string,
+  outCallNumber: string,
+  callback?: Function
+}
+const callOutRequest = ({ dialNumber, outCallNumber, callback = Function.prototype }: ICallOutRequest) => async (dispatch: Store.dispatch) => {
+  const res = await callOut(dialNumber, outCallNumber);
   handleRes(res, callback, () => {
+    let phone = getPhone();
     // 如果刚好有进线，那么不处理外呼失败提示
     if ((phone.isBusy && phone.callStatus !== 'callOut')) return true;
     switch (res.code) {
@@ -52,6 +56,7 @@ const callOutRequest = (realDialNumber: string, outCallNumber: string, callback 
         message.error(res.msg)
         break;
       case 4000:
+        message.error(res.msg)
         dispatch(showSecurityBookModal() as any);
         break;
     }
@@ -64,6 +69,7 @@ const callOutRequest = (realDialNumber: string, outCallNumber: string, callback 
     })
 
     // TODO 通知页面头部
+    // this.__session.__emit('oncalloutfaile');
   })
 }
 
@@ -91,24 +97,27 @@ export const actionCallOut = (options?: Common.IObject<any>) => async (dispatch:
 
   if (!phone.outCallRandom && !outCallNumber) return message.error('请选择外呼号码');
 
+  clearTimeout(globalVar.autoAnswerTimer);
+
   callPanelDebug(`[sendCallOut] number: ${phone.outCallNumber}`);
 
+  const callStatus = 'callOut'
   dispatch({
     type: 'PHONE_SET',
     payload: {
       display: options ? true : phone.display,
       speakingNumber: realDialNumber,
-      callStatus: 'callOut',
-      tip: callStatusMap.callOut
+      callStatus,
+      tip: callStatusMap[callStatus]
     }
   })
-  phone = getPhone();
 
-  dispatch(callOutRequest(realDialNumber, outCallNumber, get(options, 'cb', Function.prototype)) as any)
+  dispatch(callOutRequest({
+    dialNumber: realDialNumber, outCallNumber, callback: get(options, 'cb', Function.prototype)
+  }) as any)
 }
 
-export const actionIntercomCallOut = (remoteStaffId: number
-) => async (dispatch: Store.dispatch) => {
+export const actionIntercomCallOut = () => async (dispatch: Store.dispatch) => {
   let phone = getPhone();
 
   const checkResult = checkCallStatus({
@@ -116,7 +125,7 @@ export const actionIntercomCallOut = (remoteStaffId: number
   }, phone)
   if (checkResult) return message.error(checkResult);
 
-  callPanelDebug('[sendIntercomCallout]  staffId:%s', remoteStaffId);
+  callPanelDebug('[sendIntercomCallout]  staffId:%s', phone.intercom.remoteStaffId);
 
   dispatch({
     type: 'PHONE_SET',
@@ -127,12 +136,11 @@ export const actionIntercomCallOut = (remoteStaffId: number
       tip: callStatusMap.callOut
     }
   })
+
   phone = getPhone();
 
-  const res = await intercomCallOut(remoteStaffId);
-  handleRes(res, () => {
-    // TODO 处理拨号成功
-  }, () => {
+  const res = await intercomCallOut(phone.intercom.remoteStaffId);
+  handleRes(res, Function.prototype, () => {
     // 如果刚好有进线，那么不处理外呼失败提示
     if ((phone.isBusy && phone.callStatus !== 'callOut')) return true;
     switch (res.code) {
@@ -153,6 +161,7 @@ export const actionIntercomCallOut = (remoteStaffId: number
     phone = getPhone();
 
     // TODO 通知页面头部
+    // me.__session.__emit('oncalloutfaile')
   })
 }
 
@@ -169,7 +178,9 @@ export const actionCallTask = (callTaskData: any) => async (dispatch: Store.disp
       tip: callStatusMap[callStatus],
     }
   })
-  dispatch(callOutRequest(dialNumber, outCallNumber) as any)
+  dispatch(callOutRequest({
+    dialNumber, outCallNumber
+  }) as any)
 }
 
 interface IHandleSetStatus {
@@ -247,7 +258,7 @@ const handleSetStatus = (options: IHandleSetStatus) => async (dispatch: Store.di
     }
 
     // 软电话模式下，如果离线成功，断开呼叫服务
-    if (seatStatus === 0 && phone.mode === PhoneMode.soft && phone.isBusy) sipAdaptor.disConnect();
+    if (seatStatus === 0 && phone.mode === PhoneMode.soft && phone.isBusy) sipAdaptor.disconnect();
 
     // 统一 dispatch
     dispatch({
@@ -746,12 +757,12 @@ export const actionSetMode = (mode: PhoneMode) => (dispatch: Store.dispatch) => 
     [PhoneMode.phone]: () => {
       dispatch(actionSetStatusOptions([4]) as any)
       dispatch(actionSetStatus({ value: PhoneStatus.mobile }) as any)
-      sipAdaptor.disConnect();
+      sipAdaptor.disconnect();
     },
     [PhoneMode.sip]: () => {
       dispatch(actionSetStatusOptions([5, 2, 6, 0]) as any)
       dispatch(actionSetStatus({ value: PhoneStatus.offline }) as any)
-      sipAdaptor.disConnect();
+      sipAdaptor.disconnect();
     },
   }
   handlerMap[mode]();
